@@ -14,10 +14,10 @@ services:
     # -s "name;path;browseable;readonly;guest_ok"
     # -u "user;password"
     command: >
-      -s "media;/shared;yes;no;yes"
       -u "${SMB_USER};${SMB_PASS}"
       -w "WORKGROUP"
       -p
     volumes:
       - /mnt/media:/shared
+      - ./smb.conf:/etc/samba/smb.conf
     restart: unless-stopped
