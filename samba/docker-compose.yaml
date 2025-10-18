@@ -17,7 +17,6 @@ services:
       -s "media;/shared;yes;no;yes"
       -u "${SMB_USER};${SMB_PASS}"
       -w "WORKGROUP"
-      --smb2 enable
       -p
     volumes:
       - /mnt/media:/shared
