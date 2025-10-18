@@ -5,6 +5,10 @@ services:
     environment:
       - TZ=America/Toronto
       - NAME=Media     # share display name
+      - USER=media
+      - PASS=changeMe123
+      - UID=1000
+      - GID=1000
       - RW=true        # read-write enabled
     ports:
       - 445:445
