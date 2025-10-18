@@ -1,23 +1,15 @@
 services:
   samba:
-    image: dperson/samba:latest
+    image: dockurr/samba
     container_name: samba
-    # Expose SMB/CIFS ports
-    ports:
-      - "137:137/udp"
-      - "138:138/udp"
-      - "139:139/tcp"
-      - "445:445/tcp"
     environment:
-      - TZ=${TZ}
-    # Share definition:
-    # -s "name;path;browseable;readonly;guest_ok"
-    # -u "user;password"
-    command: >
-      -u "${SMB_USER};${SMB_PASS}"
-      -w "WORKGROUP"
-      -p
+      - TZ=America/Toronto
+      - NAME=Media     # share display name
+      - RW=true        # read-write enabled
+    ports:
+      - 445:445
     volumes:
-      - /mnt/media:/shared
-      - ./smb.conf:/etc/samba/smb.conf
+      - /mnt/media:/storage
+      # - ./smb.conf:/etc/samba/smb.conf
+      - ./users.conf:/etc/samba/users.conf
     restart: unless-stopped
