@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  samba:
+    image: dperson/samba:latest
+    container_name: samba
+    # Expose SMB/CIFS ports
+    ports:
+      - "137:137/udp"
+      - "138:138/udp"
+      - "139:139/tcp"
+      - "445:445/tcp"
+    environment:
+      - TZ=${TZ}
+    # Share definition:
+    # -s "name;path;browseable;readonly;guest_ok"
+    # -u "user;password"
+    command: >
+      -s "media;/shared;yes;no;yes"
+      -u "${SMB_USER};${SMB_PASS}"
+      -w "WORKGROUP"
+      -p
+    volumes:
+      - /mnt/media:/shared
+    restart: unless-stopped
