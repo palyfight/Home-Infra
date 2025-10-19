@@ -6,6 +6,8 @@
 # and: https://academictorrents.com/details/8c271f4d2e92a3449e2d1bde633cd49f64af888f
 #
 set -euo pipefail
+export LANG=C.UTF-8
+export LC_ALL=C.UTF-8
 IFS=$'\n\t'
 
 ########################################
@@ -52,6 +54,7 @@ require_bin find
 require_bin awk
 require_bin stat
 require_bin flock
+require_bin realpath
 
 sanitize_name() {
   local s="$1"
@@ -143,27 +146,26 @@ remote_file_size() {
   printf '%s' "${bytes:-0}"
 }
 
-# Sum remote bytes for a directory by enumerating LOCAL files and asking the server
-# for the exact size of each via allinfo. This avoids parsing 'ls' formats.
+# Sum remote bytes for a directory by enumerating LOCAL files
+# and querying the exact remote file with allinfo.
 remote_dir_size_from_local() {
-  local local_root="$1"   # e.g., /home/.../Big Buck Bunny
-  local remote_root="$2"  # e.g., /Torrents/Big Buck Bunny/Big Buck Bunny
+  local local_root="$1"    # e.g., /home/.../Nausicaä ...
+  local remote_root="$2"   # e.g., /Torrents/Nausicaä ...   (see policy fix below)
   local total=0
 
-  # Ensure paths end up like: remote_root/<relative path inside local_root>
-  # We iterate LOCAL files so we know exactly what should exist remotely.
   while IFS= read -r -d '' f; do
-    # relative path inside the dir
-    local rel="${f#$local_root/}"
-    # map to remote dir/name
+    # Compute path relative to local_root (literal, robust)
+    local rel
+    rel="$(realpath --relative-to="$local_root" "$f")" || rel="${f#$local_root/}"
+
+    # Map to remote path
     local rdir rname
     rdir="$(dirname "$remote_root/$rel")"
     rname="$(basename "$f")"
 
-    # Query exact remote file size
+    # Exact file size on remote
     local sz
     sz="$(remote_file_size "$rdir" "$rname")"
-    # If any file is missing or unreadable remotely, treat as 0 (forces retry/keep local)
     [[ -n "$sz" ]] || sz=0
     total=$(( total + sz ))
   done < <(find "$local_root" -type f -print0)
@@ -276,9 +278,8 @@ process_job() {
   # shellcheck disable=SC1090
   . "$job" || { log "[ERROR] Unable to read job $job"; return 1; }
 
-  local TORRENT_NAME SAN_NAME LOCAL_PATH REMOTE_DIR
-  TORRENT_NAME="$N"
-  SAN_NAME="$(sanitize_name "$TORRENT_NAME")"
+  # Resolve what actually finished on disk (file OR directory).
+  local LOCAL_PATH
   LOCAL_PATH="$(resolve_local_path "$F" "$D")"
 
   if [[ ! -e "$LOCAL_PATH" ]]; then
@@ -286,41 +287,61 @@ process_job() {
     return 1
   fi
 
-  # Policy: files go directly under /Torrents; directories get /Torrents/<Name>/…
+  # Use the REAL on-disk basename for remote naming (preserves accents, avoids %N mismatch)
+  local BASE
+  BASE="$(basename "$LOCAL_PATH")"
+
+  # Files go directly under /Torrents; directories replicate their basename under /Torrents
+  local REMOTE_DIR REMOTE_TARGET
+  REMOTE_DIR="${REMOTE_BASE%/}"               # always cd into /Torrents
   if [[ -f "$LOCAL_PATH" ]]; then
-    REMOTE_DIR="${REMOTE_BASE%/}"
+    REMOTE_TARGET="${REMOTE_DIR}/${BASE}"     # /Torrents/<file>
   else
-    REMOTE_DIR="${REMOTE_BASE%/}/${SAN_NAME}"
+    REMOTE_TARGET="${REMOTE_DIR}/${BASE}"     # /Torrents/<dir>
   fi
 
-  log "Processing job: N='$TORRENT_NAME' F='$F' D='$D'"
-  log "Local path: $LOCAL_PATH"
-  log "Target: $SMB_SERVER  Remote dir: $REMOTE_DIR"
+  log "Processing job:"
+  log "  Local path: $LOCAL_PATH"
+  log "  Remote dir: $REMOTE_DIR"
+  log "  Remote target: $REMOTE_TARGET"
 
+  # Ensure /Torrents exists (and is writable)
   with_retries "mkdir -p $REMOTE_DIR" remote_mkdir_p "$REMOTE_DIR" || return 1
 
+  # Upload and verify
   if [[ -f "$LOCAL_PATH" ]]; then
-    local REMOTE_FILE="${REMOTE_DIR}/$(basename "$LOCAL_PATH")"
+    log "Uploading file: $BASE -> $REMOTE_DIR"
     if ! with_retries "put file" smb_put_file "$LOCAL_PATH" "$REMOTE_DIR"; then
       return 1
     fi
-    if verify_upload "$LOCAL_PATH" "$REMOTE_FILE"; then
-      delete_local "$LOCAL_PATH"; log "[OK] File moved."; return 0
+    # Verify the exact remote file (your verify_upload handles file vs dir)
+    if verify_upload "$LOCAL_PATH" "$REMOTE_TARGET"; then
+      delete_local "$LOCAL_PATH"
+      log "[OK] File moved."
+      return 0
     else
-      log "[ERROR] Verify failed for file."; return 1
+      log "[ERROR] Verification failed for file: $REMOTE_TARGET"
+      return 1
     fi
+
   elif [[ -d "$LOCAL_PATH" ]]; then
-    local REMOTE_TREE="${REMOTE_DIR}/$(basename "$LOCAL_PATH")"
+    log "Uploading directory: $BASE -> $REMOTE_DIR"
     if ! with_retries "put directory" smb_put_dir_recursive "$LOCAL_PATH" "$REMOTE_DIR"; then
       return 1
     fi
-    if verify_upload "$LOCAL_PATH" "$REMOTE_TREE"; then
-      delete_local "$LOCAL_PATH"; log "[OK] Directory moved."; return 0
+    # After mput <BASE>, the server creates /Torrents/<BASE>/...
+    if verify_upload "$LOCAL_PATH" "$REMOTE_TARGET"; then
+      delete_local "$LOCAL_PATH"
+      log "[OK] Directory moved."
+      return 0
     else
-      log "[ERROR] Verify failed for directory."; return 1
+      log "[ERROR] Verification failed for directory: $REMOTE_TARGET"
+      return 1
     fi
+
   else
-    log "[ERROR] Path is neither file nor directory: $LOCAL_PATH"; return 1
+    log "[ERROR] Path is neither file nor directory: $LOCAL_PATH"
+    return 1
   fi
 }
 
