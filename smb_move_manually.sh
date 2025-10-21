@@ -17,8 +17,14 @@ SMB_SERVER="//192.168.1.176/Media"
 SMB_USER="media"
 SMB_PASS="changeMe123"
 
+# smbclient options
+SMB_TIMEOUT=0           # seconds
+# SMB_EXTRA_OPTS=()        # e.g. force protocol: SMB_EXTRA_OPTS=(-m SMB3)
+# If you suspect dialect issues with your NAS, uncomment the next line:
+SMB_EXTRA_OPTS=(-m SMB3)
+
 # Local and remote paths
-LOCAL_DIR="${LOCAL_DIR:-"$HOME/Videos/torrents"}"
+LOCAL_DIR="${LOCAL_DIR:-"$HOME/Videos/torrents/ready"}"
 REMOTE_DIR="${REMOTE_DIR:-"/Torrents"}"   # folder inside the share
 
 # Optional: set DRY_RUN=1 to test without changing anything
@@ -68,7 +74,7 @@ upload_item() {
     return 0
   fi
 
-  smbclient "$SMB_SERVER" -U "${SMB_USER}%${SMB_PASS}" <<EOF >/dev/null
+  smbclient "$SMB_SERVER" -U "${SMB_USER}%${SMB_PASS}" -t "$SMB_TIMEOUT" "${SMB_EXTRA_OPTS[@]}" <<EOF >/dev/null
 cd "$REMOTE_DIR"
 recurse ON
 prompt OFF

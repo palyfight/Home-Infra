@@ -35,10 +35,10 @@ MAX_JOB_RETRIES=4
 REQUEUE_SLEEP=3
 
 # smbclient options
-SMB_TIMEOUT=60           # seconds
-SMB_EXTRA_OPTS=()        # e.g. force protocol: SMB_EXTRA_OPTS=(-m SMB3)
+SMB_TIMEOUT=0           # seconds
+# SMB_EXTRA_OPTS=()        # e.g. force protocol: SMB_EXTRA_OPTS=(-m SMB3)
 # If you suspect dialect issues with your NAS, uncomment the next line:
-# SMB_EXTRA_OPTS=(-m SMB3)
+SMB_EXTRA_OPTS=(-m SMB3)
 ########################################
 #          END CONFIGURATION           #
 ########################################
@@ -92,16 +92,123 @@ remote_mkdir_p() {
   return 0
 }
 
-smb_put_file() {
-  local src="$1" rdir="$2" base; base="$(basename "$src")"
-  run_smb "cd \"$rdir\"; prompt OFF; lcd \"$(dirname "$src")\"; put \"$base\""
-  run_smb "cd \"$REMOTE_DIR\"; allinfo \"$(basename "$LOCAL_PATH")\"" || true
+# Upload one file with robust resume until remote size == local size.
+# Uses: remote_file_size, run_smb, log, INITIAL_BACKOFF, MAX_RETRIES
+smb_put_one_file() {
+  local local_path="$1" rparent="$2" rname="$3"
+
+  local lsz; lsz="$(stat -c '%s' -- "$local_path" || echo 0)"
+  if [[ "$lsz" -le 0 ]]; then
+    log "[ERROR] Local file has zero size or missing: $local_path"
+    return 1
+  fi
+
+  # Make sure remote parent exists
+  remote_mkdir_p "$rparent" || return 1
+
+  local attempt=1
+  local backoff="$INITIAL_BACKOFF"
+  local last_remote=-1
+  local same_count=0
+  local SAME_LIMIT=6        # ~6 checks with no progress -> backoff & reconnect
+  local CHECK_INTERVAL=5    # seconds between progress checks
+
+  while :; do
+    # Current remote size
+    local rsz; rsz="$(remote_file_size "$rparent" "$rname")"
+    [[ -z "$rsz" ]] && rsz=0
+    log "Upload progress: $rparent/$rname : remote=$rsz local=$lsz"
+
+    if (( rsz >= lsz )); then
+      # Done!
+      return 0
+    fi
+
+    # Try to (re)send remainder using reput. reput resumes at remote size.
+    # Note: avoid lcd tricks; pass absolute local path.
+    if ! run_smb "cd \"$rparent\"; prompt OFF; reput \"$(realpath -s "$local_path")\" \"$rname\""; then
+      log "[WARN] reput call failed for: $local_path -> $rparent/$rname"
+    fi
+
+    # Wait and re-check progress a few times before deciding it stalled
+    local i
+    for (( i=0; i<SAME_LIMIT; i++ )); do
+      sleep "$CHECK_INTERVAL"
+      rsz="$(remote_file_size "$rparent" "$rname")"
+      [[ -z "$rsz" ]] && rsz=0
+      log "Upload progress: $rparent/$rname : remote=$rsz local=$lsz"
+
+      if (( rsz >= lsz )); then
+        return 0
+      fi
+      if (( rsz == last_remote )); then
+        same_count=$((same_count+1))
+      else
+        same_count=0
+        last_remote="$rsz"
+      fi
+
+      # If we saw progress (remote size increased), break early to reput again
+      if (( rsz > last_remote )); then
+        break
+      fi
+    done
+
+    # If no progress over SAME_LIMIT intervals, back off and retry
+    if (( same_count >= SAME_LIMIT )); then
+      if (( attempt >= MAX_RETRIES )); then
+        log "[ERROR] Upload stalled after $attempt attempt(s): $local_path -> $rparent/$rname"
+        return 1
+      fi
+      log "[WARN] Upload stalled; backing off ${backoff}s (attempt $attempt/$MAX_RETRIES)"
+      sleep "$backoff"
+      attempt=$((attempt+1))
+      backoff=$((backoff*2))
+      same_count=0
+      last_remote=-1
+    fi
+  done
 }
 
+smb_put_file() {
+  local src="$1" rdir="$2" base; base="$(basename "$src")"
+  smb_put_one_file "$src" "$rdir" "$base"
+  run_smb "cd \"$rdir\"; allinfo \"$base\"" || true
+}
+
+# Upload a directory tree by walking locally and issuing precise puts (no mput), with resume.
+# args: srcdir (absolute or relative local dir), rdir (remote parent dir, e.g. /Torrents)
 smb_put_dir_recursive() {
-  local srcdir="$1" rdir="$2" base; base="$(basename "$srcdir")"
-  run_smb "cd \"$rdir\"; recurse ON; prompt OFF; lcd \"$(dirname "$srcdir")\"; mput \"$base\""
-  run_smb "cd \"$REMOTE_DIR\"; ls \"$(basename "$LOCAL_PATH")\"" || true
+  local srcdir="$1" rdir="$2"
+  srcdir="$(realpath -s "$srcdir")" || return 1
+  local topname; topname="$(basename "$srcdir")"
+
+  # 1) Ensure remote top directory exists
+  remote_mkdir_p "$rdir/$topname" || return 1
+
+  # 2) Create subdirectories (parents before children)
+  while IFS= read -r -d '' d; do
+    local rel rpath
+    rel="$(realpath --relative-to="$srcdir" "$d")" || rel="${d#$srcdir/}"
+    [[ "$rel" == "." || -z "$rel" ]] && continue
+    rpath="$rdir/$topname/$rel"
+    remote_mkdir_p "$rpath" || return 1
+  done < <(find "$srcdir" -type d -print0)
+
+  # 3) Upload files with resume
+  while IFS= read -r -d '' f; do
+    local rel rparent rname
+    rel="$(realpath --relative-to="$srcdir" "$f")" || rel="${f#$srcdir/}"
+    rparent="$(dirname "$rdir/$topname/$rel")"
+    rname="$(basename "$f")"
+
+    if ! smb_put_one_file "$f" "$rparent" "$rname"; then
+      log "[WARN] put failed for: $f -> $rparent/$rname"
+      return 1
+    fi
+  done < <(find "$srcdir" -type f -print0)
+
+  return 0
 }
 
 remote_file_size() {
@@ -111,30 +218,41 @@ remote_file_size() {
          "${SMB_EXTRA_OPTS[@]}" \
          -c "cd \"$rdir\"; allinfo \"$rname\"" 2>/dev/null || true)"
 
-  # Try several common patterns:
-  #   size: 184292
-  #   size: 180 KB (strip non-digits)
-  #   stream: [::$DATA], 184292 bytes
-  #   stream: [::$DATA], 180 KB
+  # Parse size robustly:
+  # - Accept exact integers: "size: 2302220197"
+  # - Accept scientific:     "2.30222e+09 bytes"
+  # - Accept with commas:    "2,302,220,197 bytes"
+  # Always print a plain integer (no scientific).
   local bytes
   bytes="$(printf '%s\n' "$out" | awk '
-    BEGIN{sum=0; found=0}
-    # Direct size: lines that contain "size:"
-    /[Ss][Ii][Zz][Ee][[:space:]]*:/ {
-      for(i=1;i<=NF;i++){
-        tmp=$i; gsub(/[^0-9]/,"",tmp);
-        if(tmp ~ /^[0-9]+$/){ sum=tmp+0; found=1; break }
+    BEGIN {
+      found = 0
+      # Force non-scientific integer printing when we printf later.
+      OFMT="%.0f"
+      CONVFMT="%.17g"
+    }
+    /[Ss][Ii][Zz][Ee][[:space:]]*:|[Ss][Tt][Rr][Ee][Aa][Mm].*bytes/ {
+      for (i=1; i<=NF; i++) {
+        tok = $i
+        # Case 1: scientific notation like 2.30222e+09
+        if (tok ~ /^[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)$/) {
+          val = tok + 0
+          printf "%.0f\n", val
+          found = 1
+          exit
+        }
+        # Case 2: integer possibly with separators: 2,302,220,197
+        gsub(/[^0-9]/, "", tok)
+        if (tok ~ /^[0-9]+$/) {
+          val = tok + 0
+          printf "%.0f\n", val
+          found = 1
+          exit
+        }
       }
     }
-    # Stream size: lines that contain "stream:" and "bytes"
-    /[Ss][Tt][Rr][Ee][Aa][Mm].*bytes/ {
-      for(i=1;i<=NF;i++){
-        tmp=$i; gsub(/[^0-9]/,"",tmp);
-        if(tmp ~ /^[0-9]+$/){ sum=tmp+0; found=1; break }
-      }
-    }
-    END{
-      if(found) print sum+0; else print 0
+    END {
+      if (!found) print 0
     }
   ')"
 
@@ -194,8 +312,11 @@ remote_sum_sizes() {
 
 local_sum_sizes() {
   local p="$1"
-  if [[ -f "$p" ]]; then stat -c '%s' -- "$p"
-  else find "$p" -type f -printf '%s\n' | awk '{s+=$1} END{print s+0}'
+  if [[ -f "$p" ]]; then
+    stat -c '%s' -- "$p"
+  else
+    # ensure awk prints integer only
+    find "$p" -type f -printf '%s\n' | awk '{s+=$1} END{printf "%.0f", s}'
   fi
 }
 
@@ -219,7 +340,7 @@ verify_upload() {
       rb="$(remote_dir_size_from_local "$local_path" "$remote_path")"
     fi
 
-    log "Verify sizes: local=${lb} remote=${rb} [${remote_path}]"
+    log "Verify sizes: local=$(printf '%.0f' "$lb") remote=$(printf '%.0f' "$rb") [${remote_path}]"
 
     # Sanity guard: if remote is unexpectedly > local by a large factor, consider it a mismatch.
     # (Catches any future parsing bugs or server anomalies.)
