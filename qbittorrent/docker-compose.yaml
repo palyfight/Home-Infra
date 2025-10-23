@@ -94,3 +94,18 @@ services:
       - /var/run/utmp:/var/run/utmp
       - /etc/machine-id:/etc/machine-id
     restart: unless-stopped
+    
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FILE=${LOG_FILE:-none}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=${TZ}
+    ports:
+      - "8191:8191"
+    volumes:
+      - ${FLARESOLVERR_CONFIG}:/config
+    restart: unless-stopped
