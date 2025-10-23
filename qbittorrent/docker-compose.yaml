@@ -53,6 +53,8 @@ services:
       - ${RADARR_DOWNLOADS}:/downloads
     ports:
       - 7878:7878
+    networks:
+      - recyclarr
     restart: unless-stopped
 
   sonarr:
@@ -68,11 +70,12 @@ services:
       - ${SONARR_DOWNLOADS}:/downloads
     ports:
       - 8989:8989
+    networks:
+      - recyclarr
     restart: unless-stopped
 
   recyclarr:
     image: ghcr.io/recyclarr/recyclarr:latest
-    security_opt: ['no-new-privileges:true']
     container_name: recyclarr
     user: 1000:1000
     volumes:
@@ -80,4 +83,11 @@ services:
     environment:
       - TZ=${TZ}
       - RECYCLARR_CREATE_CONFIG=${RECYCLARR_CREATE_CONFIG}
+    networks:
+      - recyclarr
     restart: unless-stopped
+
+networks:
+  recyclarr:
+    name: recyclarr
+    external: false
