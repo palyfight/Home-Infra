@@ -69,3 +69,15 @@ services:
     ports:
       - 8989:8989
     restart: unless-stopped
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    security_opt: ['no-new-privileges:true']
+    container_name: recyclarr
+    user: 1000:1000
+    volumes:
+      - ${RECYCLARR_CONFIG}:/config
+    environment:
+      - TZ=${TZ}
+      - RECYCLARR_CREATE_CONFIG=${RECYCLARR_CREATE_CONFIG}
+    restart: unless-stopped
