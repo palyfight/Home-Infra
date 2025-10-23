@@ -53,8 +53,6 @@ services:
       - ${RADARR_DOWNLOADS}:/downloads
     ports:
       - 7878:7878
-    networks:
-      - recyclarr
     restart: unless-stopped
 
   sonarr:
@@ -70,24 +68,29 @@ services:
       - ${SONARR_DOWNLOADS}:/downloads
     ports:
       - 8989:8989
-    networks:
-      - recyclarr
     restart: unless-stopped
 
-  recyclarr:
-    image: ghcr.io/recyclarr/recyclarr:latest
-    container_name: recyclarr
-    user: 1000:1000
-    volumes:
-      - ${RECYCLARR_CONFIG}:/config
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
     environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=${TZ}
-      - RECYCLARR_CREATE_CONFIG=${RECYCLARR_CREATE_CONFIG}
-    networks:
-      - recyclarr
+    volumes:
+      - ${PROWLARR_CONFIG}:/config
+    ports:
+      - 9696:9696
     restart: unless-stopped
 
-networks:
-  recyclarr:
-    name: recyclarr
-    external: false
+  notifiarr:
+    image: golift/notifiarr:latest
+    container_name: notifiarr
+    hostname: notifiarr
+    ports:
+      - 5454:5454
+    volumes:
+      - ${NOTIFIARR_CONFIG}:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    restart: unless-stopped
