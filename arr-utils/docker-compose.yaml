@@ -25,4 +25,5 @@ services:
       - BASE_PATH=
     volumes:
       - ${CLEANUPARR_CONFIG}:/config
+      - ${CLEANUPARR_MEDIA}:/downloads #optional
     restart: unless-stopped
