@@ -2,9 +2,6 @@ networks:
   arrs:
     name: arrs
     driver: bridge
-  plex:
-    external: true
-    name: plex
   qbit:
     external: true
     name: qbit

@@ -2,9 +2,6 @@ networks:
   arrs:
     external: true
     name: arrs
-  plex:
-    external: true
-    name: plex
   qbit:
     external: true
     name: qbit
@@ -23,7 +20,6 @@ services:
     networks:
       - qbit
       - arrs
-      - plex
     restart: unless-stopped
 
   cleanuparr:
@@ -44,5 +40,4 @@ services:
     networks:
       - qbit
       - arrs
-      - plex
     restart: unless-stopped

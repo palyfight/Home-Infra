@@ -1,8 +1,3 @@
-networks:
-  plex:
-    name: plex
-    driver: bridge
-
 services:
   plex:
     image: lscr.io/linuxserver/plex
@@ -17,8 +12,6 @@ services:
     volumes:
       - ${PLEX_CONFIG}:/config
       - ${PLEX_MEDIA}:/data/media
-    networks:
-      - plex
     restart: unless-stopped
 
   tautulli:
@@ -32,6 +25,4 @@ services:
       - ${TAUTULLI_CONFIG}:/config
     ports:
       - 8181:8181
-    networks:
-      - plex
     restart: unless-stopped
