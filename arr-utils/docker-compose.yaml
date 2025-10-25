@@ -1,21 +1,34 @@
+networks:
+  arrs:
+    external: true
+    name: arrs
+  plex:
+    external: true
+    name: plex
+  qbit:
+    external: true
+    name: qbit
+
 services:
   homarr:
     image: ghcr.io/homarr-labs/homarr:latest
     container_name: homarr
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
-      - ./homarr/appdata:/appdata
     environment:
       - SECRET_ENCRYPTION_KEY=139520061bb849531ac9bce1307db3b30adee733e661be788ee229fca5d6979f
+    volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
+      - ./homarr/appdata:/appdata
     ports:
       - '7575:7575'
+    networks:
+      - qbit
+      - arrs
+      - plex
     restart: unless-stopped
 
   cleanuparr:
     image: ghcr.io/cleanuparr/cleanuparr:latest
     container_name: cleanuparr
-    ports:
-      - "11011:11011"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -26,4 +39,10 @@ services:
     volumes:
       - ${CLEANUPARR_CONFIG}:/config
       - ${CLEANUPARR_MEDIA}:/downloads #optional
+    ports:
+      - "11011:11011"
+    networks:
+      - qbit
+      - arrs
+      - plex
     restart: unless-stopped

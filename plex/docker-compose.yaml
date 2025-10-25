@@ -1,3 +1,8 @@
+networks:
+  plex:
+    name: plex
+    driver: bridge
+
 services:
   plex:
     image: lscr.io/linuxserver/plex
@@ -12,4 +17,21 @@ services:
     volumes:
       - ${PLEX_CONFIG}:/config
       - ${PLEX_MEDIA}:/data/media
+    networks:
+      - plex
+    restart: unless-stopped
+
+  tautulli:
+    image: ghcr.io/tautulli/tautulli
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${TAUTULLI_CONFIG}:/config
+    ports:
+      - 8181:8181
+    networks:
+      - plex
     restart: unless-stopped
