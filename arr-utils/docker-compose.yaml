@@ -5,6 +5,9 @@ networks:
   qbit:
     external: true
     name: qbit
+  plex:
+    external: true
+    name: plex
 
 services:
   homarr:
@@ -20,6 +23,7 @@ services:
     networks:
       - qbit
       - arrs
+      - plex
     restart: unless-stopped
 
   cleanuparr:
