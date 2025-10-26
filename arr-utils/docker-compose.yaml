@@ -26,6 +26,41 @@ services:
       - plex
     restart: unless-stopped
 
+  labelarr:
+    image: ghcr.io/nullable-eth/labelarr:latest
+    container_name: labelarr
+    environment:
+      # Required - Get from Plex Web (F12 → Network → X-Plex-Token)
+      - PLEX_TOKEN=${PLEX_TOKEN}
+      # Required - Get from https://www.themoviedb.org/settings/api
+      - TMDB_READ_ACCESS_TOKEN=${TMDB_READ_ACCESS_TOKEN}
+      # Required - Your Plex server details
+      - PLEX_SERVER=${PLEX_SERVER}
+      - PLEX_PORT=32400
+      - PLEX_REQUIRES_HTTPS=false
+      # Process all libraries (recommended for first-time users)
+      - MOVIE_PROCESS_ALL=true
+      - TV_PROCESS_ALL=true
+      # Optional settings
+      - PROCESS_TIMER=1h
+      - UPDATE_FIELD=label  # or 'genre'
+      # Optional Radarr/Sonarr integration
+      - USE_RADARR=true
+      - RADARR_URL=http://radarr:7878
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - USE_SONARR=true
+      - SONARR_URL=http://sonarr:8989
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      # Optional export functionality
+      # - EXPORT_LABELS=action,comedy,thriller,documentary,kids
+      # - EXPORT_LOCATION=/data/exports
+    volumes:
+      - ${LABELARR_CONFIG}:/data
+      - ${LABELARR_EXPORTS}:/data/exports  # Mount host directory for export files
+    networks:
+      - arrs
+    restart: unless-stopped
+
   cleanuparr:
     image: ghcr.io/cleanuparr/cleanuparr:latest
     container_name: cleanuparr
