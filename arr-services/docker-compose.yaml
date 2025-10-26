@@ -43,6 +43,24 @@ services:
       - arrs
     restart: unless-stopped
 
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${BAZARR_CONFIG}:/config
+      - ${BAZARR_MOVIES}:/movies #optional
+      - ${BAZARR_TV}:/tv #optional
+      - ${BAZARR_ANIME}:/anime #optional
+    ports:
+      - 6767:6767
+    networks:
+      - arrs
+    restart: unless-stopped
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
