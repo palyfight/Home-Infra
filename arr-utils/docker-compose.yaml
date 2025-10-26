@@ -17,7 +17,7 @@ services:
       - SECRET_ENCRYPTION_KEY=139520061bb849531ac9bce1307db3b30adee733e661be788ee229fca5d6979f
     volumes:
       # - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
-      - ./homarr/appdata:/appdata
+      - ${HOMARR_CONFIG}:/appdata
     ports:
       - '7575:7575'
     networks:
