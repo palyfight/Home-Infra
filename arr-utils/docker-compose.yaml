@@ -74,14 +74,13 @@ services:
       - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
-      - UMASK_SET=002
+      - nodeName=tdarr-internal-worker
       - serverIP=0.0.0.0
       - serverPort=8266
       - webUIPort=8265
-      - internalNode=true
       - inContainer=true
+      - internalNode=true
       - ffmpegVersion=7
-      - nodeName=MyInternalNode
       - auth=false
       - openBrowser=true
       - maxLogSizeMB=10
@@ -94,7 +93,7 @@ services:
       - ${TDARR_HOME_DIR}/transcode_cache:/temp
     devices:
       - /dev/dri:/dev/dri
-    
+
 # node example
   tdarr-node:
     container_name: tdarr-node
@@ -102,11 +101,10 @@ services:
     restart: unless-stopped
     network_mode: service:tdarr
     environment:
-      - TZ=Europe/London
+      - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
-      - UMASK_SET=002
-      - nodeName=MyExternalNode
+      - nodeName=tdarr-external-node
       - serverIP=0.0.0.0
       - serverPort=8266
       - inContainer=true
@@ -118,8 +116,8 @@ services:
       - maxLogSizeMB=10
       - pollInterval=2000
       - startPaused=false
-      - transcodegpuWorkers=1
-      - transcodecpuWorkers=2
+      - transcodegpuWorkers=2
+      - transcodecpuWorkers=1
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
     volumes:
