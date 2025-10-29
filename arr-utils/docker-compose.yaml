@@ -113,7 +113,7 @@ services:
           name: "qbittorrent" # (optional -> if not provided, assuming "qBittorrent". Must correspond with what is specified in your *arr as download client name)
     volumes:
       # - $DOCKERDIR/appdata/decluttarr/logs:/app/logs # Uncomment to get logs in text file, too      
-      # - ${HOST_PATH_DATA}:/data # If you use detect_deletions, add the identical mount paths that you use in your sonarr/radarr instances. This may be different to this example!
+      - ${HOST_PATH_DATA}:/data # If you use detect_deletions, add the identical mount paths that you use in your sonarr/radarr instances. This may be different to this example!
     networks:
       - qbit
       - arrs
