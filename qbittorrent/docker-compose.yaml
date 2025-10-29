@@ -44,5 +44,5 @@ services:
       - TORRENTING_PORT=6881
     volumes:
       - ${QBT_CONFIG}:/config
-      - ${QBT_MEDIA}:/downloads #optional
+      - ${QBT_HOST_PATH_DATA}:/data/torrents
     restart: unless-stopped

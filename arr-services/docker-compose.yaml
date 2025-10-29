@@ -16,8 +16,9 @@ services:
       - TZ=${TZ}
     volumes:
       - ${RADARR_CONFIG}:/config
-      - ${RADARR_MOVIES}:/movies
-      - ${RADARR_DOWNLOADS}:/downloads
+      - ${HOST_PATH_DATA}:/data
+      # - ${RADARR_MOVIES}:/movies
+      # - ${RADARR_DOWNLOADS}:/downloads
     ports:
       - 7878:7878
     networks:
@@ -34,8 +35,9 @@ services:
       - TZ=${TZ}
     volumes:
       - ${SONARR_CONFIG}:/config
-      - ${SONARR_TV}:/tv
-      - ${SONARR_DOWNLOADS}:/downloads
+      - ${HOST_PATH_DATA}:/data
+      # - ${SONARR_TV}:/tv
+      # - ${SONARR_DOWNLOADS}:/downloads
     ports:
       - 8989:8989
     networks:

@@ -16,7 +16,7 @@ services:
       - PLEX_CLAIM=${PLEX_CLAIM}
     volumes:
       - ${PLEX_CONFIG}:/config
-      - ${PLEX_MEDIA}:/data/media
+      - ${PLEX_HOST_PATH_DATA}:/data/media
     restart: unless-stopped
 
   tautulli:

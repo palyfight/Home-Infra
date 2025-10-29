@@ -43,7 +43,7 @@ services:
       - TV_PROCESS_ALL=true
       # Optional settings
       - PROCESS_TIMER=1h
-      - UPDATE_FIELD=label  # or 'genre'
+      - UPDATE_FIELD=genre  # or 'label' but requires plexpass
       # Optional Radarr/Sonarr integration
       - USE_RADARR=true
       - RADARR_URL=http://radarr:7878
@@ -59,24 +59,5 @@ services:
       - ${LABELARR_EXPORTS}:/data/exports  # Mount host directory for export files
     networks:
       - arrs
-    restart: unless-stopped
-
-  cleanuparr:
-    image: ghcr.io/cleanuparr/cleanuparr:latest
-    container_name: cleanuparr
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - UMASK=${UMASK}
-      - PORT=11011
-      - BASE_PATH=
-    volumes:
-      - ${CLEANUPARR_CONFIG}:/config
-      - ${CLEANUPARR_MEDIA}:/downloads #optional
-    ports:
-      - "11011:11011"
-    networks:
-      - qbit
-      - arrs
+      - plex
     restart: unless-stopped
