@@ -86,24 +86,14 @@ services:
       - openBrowser=true
       - maxLogSizeMB=10
       - cronPluginUpdate=
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - NVIDIA_VISIBLE_DEVICES=all
     volumes:
       - ${TDARR_HOME_DIR}/server:/app/server
       - ${TDARR_HOME_DIR}/configs:/app/configs
       - ${TDARR_HOME_DIR}/logs:/app/logs
       - ${MEDIA_PATH_DATA}:/media
       - ${TDARR_HOME_DIR}/transcode_cache:/temp
-
     devices:
       - /dev/dri:/dev/dri
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: all
-            capabilities: [gpu]
     
 # node example
   tdarr-node:
@@ -132,21 +122,10 @@ services:
       - transcodecpuWorkers=2
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - NVIDIA_VISIBLE_DEVICES=all
-
     volumes:
       - ${TDARR_HOME_DIR}/configs:/app/configs
       - ${TDARR_HOME_DIR}/logs:/app/logs
       - ${MEDIA_PATH_DATA}:/media
       - ${TDARR_HOME_DIR}/transcode_cache:/temp
-
     devices:
       - /dev/dri:/dev/dri
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: all
-            capabilities: [gpu]
