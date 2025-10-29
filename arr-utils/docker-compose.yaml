@@ -69,50 +69,10 @@ services:
       TZ: ${TZ}
       PUID: ${PUID}
       PGID: ${PGID}
-
-      LOG_LEVEL: INFO
-      TEST_RUN: True
-      TIMER: 10
-      
-      # # --- Optional: Job Defaults ---
-      # You can use these to set those parameters across all jobs. If you don't specify it here, the defaults set by system will be used
-      # If you set job-specific parameters (further down below), they will override these settings.
-      max_strikes: 3
-      MIN_DAYS_BETWEEN_SEARCHES: 7
-      MAX_CONCURRENT_SEARCHES: 3
-
-      # # --- Jobs (short notation) ---
-      # If you want to go with the most basic settings, you can just turn them all on:
-      REMOVE_BAD_FILES: True
-      REMOVE_FAILED_DOWNLOADS: True
-      REMOVE_FAILED_IMPORTS: True
-      REMOVE_METADATA_MISSING: True
-      REMOVE_MISSING_FILES: True
-      REMOVE_ORPHANS: True
-      REMOVE_SLOW: True
-      REMOVE_STALLED: True
-      REMOVE_UNMONITORED: True
-      SEARCH_BETTER: True
-      SEARCH_MISSING: True
-      DETECT_DELETIONS: True
-
-      # --- Instances ---
-      SONARR:
-        - base_url: "http://sonarr:8989"
-          api_key: "$SONARR_API_KEY"
-
-      RADARR:
-        - base_url: "http://radarr:7878"
-          api_key: "$RADARR_API_KEY"
-
-      # --- Download Clients ---
-      QBITTORRENT:
-        - base_url: "http://vpn:8080"
-          username: "$QBIT_USERNAME" # (optional -> if not provided, assuming not needed)
-          password: "$QBIT_PASSWORD" # (optional -> if not provided, assuming not needed)
-          name: "qbittorrent" # (optional -> if not provided, assuming "qBittorrent". Must correspond with what is specified in your *arr as download client name)
     volumes:
-      # - $DOCKERDIR/appdata/decluttarr/logs:/app/logs # Uncomment to get logs in text file, too      
+      - declutarr_config.yaml:/app/config/config.yaml
+      # - $DOCKERDIR/appdata/decluttarr/logs:/app/logs # Uncomment to get logs in text file, too
+      # - $DOCKERDIR/appdata/decluttarr/logs:/app/logs # Uncomment to get logs in text file, too
       - ${HOST_PATH_DATA}:/data # If you use detect_deletions, add the identical mount paths that you use in your sonarr/radarr instances. This may be different to this example!
     networks:
       - qbit
