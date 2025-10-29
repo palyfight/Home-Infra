@@ -10,16 +10,18 @@ networks:
     name: plex
 
 services:
-  homarr:
-    image: ghcr.io/homarr-labs/homarr:latest
-    container_name: homarr
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
     environment:
-      - SECRET_ENCRYPTION_KEY=139520061bb849531ac9bce1307db3b30adee733e661be788ee229fca5d6979f
-    volumes:
-      # - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
-      - ${HOMARR_CONFIG}:/appdata
+      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.176:3000 # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
+      PUID: ${PUID} # optional, your user id
+      PGID: ${PGID} # optional, your group id
     ports:
-      - '7575:7575'
+      - 3000:3000
+    volumes:
+      - ${HOMEPAGE_CONFIG}:/app/config # Make sure your local config directory exists
+      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
     networks:
       - qbit
       - arrs
@@ -94,7 +96,6 @@ services:
     devices:
       - /dev/dri:/dev/dri
 
-# node example
   tdarr-node:
     container_name: tdarr-node
     image: ghcr.io/haveagitgat/tdarr_node:latest
