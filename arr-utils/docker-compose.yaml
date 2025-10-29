@@ -97,16 +97,16 @@ services:
       DETECT_DELETIONS: True
 
       # --- Instances ---
-      SONARR: >
+      SONARR:
         - base_url: "http://sonarr:8989"
           api_key: "$SONARR_API_KEY"
 
-      RADARR: >
+      RADARR:
         - base_url: "http://radarr:7878"
           api_key: "$RADARR_API_KEY"
 
       # --- Download Clients ---
-      QBITTORRENT: >
+      QBITTORRENT:
         - base_url: "http://vpn:8080"
           username: "$QBIT_USERNAME" # (optional -> if not provided, assuming not needed)
           password: "$QBIT_PASSWORD" # (optional -> if not provided, assuming not needed)
