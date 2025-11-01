@@ -96,6 +96,8 @@ services:
       - ${TDARR_HOME_DIR}/transcode_cache:/temp
     devices:
       - /dev/dri:/dev/dri
+    networks:
+      - arrs
 
   tdarr-node:
     container_name: tdarr-node
@@ -129,3 +131,5 @@ services:
       - ${TDARR_HOME_DIR}/transcode_cache:/temp
     devices:
       - /dev/dri:/dev/dri
+    networks:
+      - arrs
