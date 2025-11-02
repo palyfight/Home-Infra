@@ -130,3 +130,19 @@ services:
     devices:
       - /dev/dri:/dev/dri
     restart: unless-stopped
+
+  overseerr:
+    image: sctx/overseerr:latest
+    container_name: overseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ}
+      - PORT=5055 #optional
+    ports:
+      - 5055:5055
+    volumes:
+      - ${OVERSEERR_CONFIG}:/app/config
+    networks:
+      - arrs
+      - plex
+    restart: unless-stopped
