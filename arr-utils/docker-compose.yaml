@@ -118,8 +118,8 @@ services:
       - maxLogSizeMB=10
       - pollInterval=2000
       - startPaused=false
-      - transcodegpuWorkers=2
-      - transcodecpuWorkers=1
+      - transcodegpuWorkers=3
+      - transcodecpuWorkers=0
       - healthcheckgpuWorkers=1
       - healthcheckcpuWorkers=1
     volumes:
