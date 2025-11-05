@@ -88,7 +88,7 @@ services:
       - ${TDARR_HOME_DIR}/configs:/app/configs
       - ${TDARR_HOME_DIR}/logs:/app/logs
       - ${MEDIA_PATH_DATA}:/media
-      - ${TDARR_HOME_DIR}/transcode_cache:/temp
+      - ${MEDIA_PATH_DATA}/transcode_cache:/temp
     ports:
       - 8265:8265 # webUI port
       - 8266:8266 # server port
@@ -126,7 +126,7 @@ services:
       - ${TDARR_HOME_DIR}/configs:/app/configs
       - ${TDARR_HOME_DIR}/logs:/app/logs
       - ${MEDIA_PATH_DATA}:/media
-      - ${TDARR_HOME_DIR}/transcode_cache:/temp
+      - ${MEDIA_PATH_DATA}/transcode_cache:/temp
     devices:
       - /dev/dri:/dev/dri
     restart: unless-stopped
