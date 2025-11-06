@@ -12,7 +12,7 @@ services:
       - ${STIRLING_PDF_HOME_DIR}/logs:/logs/
       - ${STIRLING_PDF_HOME_DIR}/pipeline:/pipeline/
     ports:
-      - '8181:8080'
+      - '8282:8080'
     networks:
       - isolated
     restart: unless-stopped
