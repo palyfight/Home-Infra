@@ -1,0 +1,27 @@
+services:
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    environment:
+      - DISABLE_ADDITIONAL_FEATURES=false
+      - LANGS=en_GB
+    volumes:
+      - ${STIRLING_PDF_HOME_DIR}/trainingData:/usr/share/tessdata # Required for extra OCR languages
+      - ${STIRLING_PDF_HOME_DIR}/extraConfigs:/configs
+      - ${STIRLING_PDF_HOME_DIR}/customFiles:/customFiles/
+      - ${STIRLING_PDF_HOME_DIR}/logs:/logs/
+      - ${STIRLING_PDF_HOME_DIR}/pipeline:/pipeline/
+    ports:
+      - '8181:8080'
+    networks:
+      - isolated
+    restart: unless-stopped
+
+networks:
+  isolated:
+    internal: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.128.1.0/24
