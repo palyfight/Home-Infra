@@ -13,15 +13,4 @@ services:
       - ${STIRLING_PDF_HOME_DIR}/pipeline:/pipeline/
     ports:
       - '8282:8080'
-    networks:
-      - isolated
     restart: unless-stopped
-
-networks:
-  isolated:
-    internal: true
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 192.128.1.0/24

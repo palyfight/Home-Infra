@@ -1,4 +1,6 @@
 qbittorrent/.env
 arr-utils/.env
+plex/.env
+
 declutarr_config.yaml
 homepage-config/logs

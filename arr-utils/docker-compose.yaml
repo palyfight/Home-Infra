@@ -130,26 +130,3 @@ services:
     devices:
       - /dev/dri:/dev/dri
     restart: unless-stopped
-
-  jellyseerr:
-    image: ghcr.io/fallenbagel/jellyseerr:latest
-    init: true
-    container_name: jellyseerr
-    environment:
-      - LOG_LEVEL=debug
-      - TZ=${TZ}
-      - PORT=5055 #optional
-    ports:
-      - 5055:5055
-    volumes:
-      - ${JELLYSEERR_CONFIG}:/app/config
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
-      start_period: 20s
-      timeout: 3s
-      interval: 15s
-      retries: 3
-    networks:
-      - arrs
-      - plex
-    restart: unless-stopped
