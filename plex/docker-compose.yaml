@@ -45,8 +45,8 @@ services:
       - LOG_LEVEL=debug
       - TZ=${TZ}
       - PORT=5055 #optional
-    # ports:
-    #   - 5055:5055
+    ports:
+      - 5055:5055
     volumes:
       - ${JELLYSEERR_CONFIG}:/app/config
     healthcheck:
@@ -60,26 +60,24 @@ services:
       - plex
     restart: unless-stopped
 
-  tailscale:
+  tailscale-nginx:
     image: tailscale/tailscale:latest
-    container_name: media-gateway
-    hostname: media-gateway
+    hostname: tailscale-nginx
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
       - TS_STATE_DIR=/var/lib/tailscale
-      - TS_SERVE_CONFIG=/config/serve.json
-      # TS_USERSPACE=true  (optional if you want userspace mode)
+      - TS_USERSPACE=false
     volumes:
-      - ${TAILSCALE_CONFIG}/config:/config # Config folder used to store Tailscale files - you may need to change the path
-      - ${TAILSCALE_CONFIG}/state:/var/lib/tailscale # Tailscale requirement - you may need to change the path
-    networks:
-      - plex
-    # No devices or cap_add if using userspace mode; if you use kernel mode, you'd need /dev/net/tun etc
-    command: ["tailscaled", "--state=/var/lib/tailscale/tailscaled.state"]
-    healthcheck:
-      test: ["CMD", "tailscale", "ip", "-4"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      - ${TAILSCALE_CONFIG}/tailscale-nginx/state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
     restart: unless-stopped
+
+  nginx:
+    image: nginx
+    depends_on:
+      - tailscale-nginx
+    network_mode: service:tailscale-nginx
