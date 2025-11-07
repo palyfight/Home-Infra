@@ -45,8 +45,8 @@ services:
       - LOG_LEVEL=debug
       - TZ=${TZ}
       - PORT=5055 #optional
-    ports:
-      - 5055:5055
+    # ports:
+    #   - 5055:5055
     volumes:
       - ${JELLYSEERR_CONFIG}:/app/config
     healthcheck:
@@ -58,4 +58,58 @@ services:
     networks:
       - arrs
       - plex
+    restart: unless-stopped
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: media-gateway
+    hostname: media-gateway
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=true         # no /dev/net/tun, no NET_ADMIN
+      - TS_SERVE_CONFIG=/config/serve.json # Tailscale Serve configuration to expose the web interface on your local Tailnet - remove this line if not required
+      - TS_LOCAL_ADDR_PORT=127.0.0.1:41234       # The <addr>:<port> for the healthz endpoint
+      - TS_ENABLE_HEALTH_CHECK=true              # Enable healthcheck endpoint: "/healthz"
+      #- TS_ACCEPT_DNS=true # Uncomment when using MagicDNS
+    volumes:
+      - ${TAILSCALE_CONFIG}/config:/config # Config folder used to store Tailscale files - you may need to change the path
+      - ${TAILSCALE_CONFIG}/state:/var/lib/tailscale # Tailscale requirement - you may need to change the path
+    networks:
+      - plex
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        tailscaled --state=/var/lib/tailscale/tailscaled.state &
+
+        # wait for tailscaled to be ready
+        until tailscale status >/dev/null 2>&1; do sleep 1; done
+
+        # Figure out the host's Docker bridge gateway (the host we need to reach Plex on)
+        HOST_GW="$(ip route | awk '/^default/ {print $3; exit}')"
+        echo "Detected Docker bridge gateway: ${HOST_GW}"
+
+        # Serve Jellyseerr at https path on the tailnet node:
+        #   https://<media-gateway>.ts.net/jellyseerr
+        tailscale serve https /jellyseerr http://jellyseerr:5055
+
+        # Forward Plex’s TCP port for native apps/clients:
+        #   connects to <media-gateway>.ts.net:32400 on the tailnet
+        tailscale serve tcp 32400 ${HOST_GW}:32400
+
+        # (Optional) Also expose Plex Web via HTTPS under a path:
+        #   https://<media-gateway>.ts.net/plex
+        # Comment this out if you prefer using only the TCP mapping above.
+        tailscale serve https /plex http://${HOST_GW}:32400
+
+        # Keep container alive
+        sleep infinity
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:41234/healthz"] # Check Tailscale has a Tailnet IP and is operational
+      interval: 1m # How often to perform the check
+      timeout: 10s # Time to wait for the check to succeed
+      retries: 3 # Number of retries before marking as unhealthy
+      start_period: 10s # Time to wait before starting health checks
     restart: unless-stopped
