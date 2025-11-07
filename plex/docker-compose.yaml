@@ -82,29 +82,32 @@ services:
       - -c
       - |
         set -e
-        tailscaled --state=/var/lib/tailscale/tailscaled.state &
 
-        # wait for tailscaled to be ready
-        until tailscale status >/dev/null 2>&1; do sleep 1; done
+        # Start tailscaled in *userspace networking* and with netfilter disabled (no iptables calls)
+        tailscaled --state=/var/lib/tailscale/tailscaled.state \
+                  --tun=userspace-networking \
+                  --netfilter-mode=off &
 
-        # Figure out the host's Docker bridge gateway (the host we need to reach Plex on)
+        # Bring the node up (auth) — since we overrode the entrypoint, we must do this ourselves
+        until tailscale status >/dev/null 2>&1; do
+          tailscale up --authkey="${TS_AUTHKEY}" --hostname="${HOSTNAME:-media-gateway}" || true
+          sleep 1
+        done
+
+        # Figure out the host's Docker bridge gateway (to reach Plex on host networking)
         HOST_GW="$(ip route | awk '/^default/ {print $3; exit}')"
         echo "Detected Docker bridge gateway: ${HOST_GW}"
 
-        # Serve Jellyseerr at https path on the tailnet node:
-        #   https://<media-gateway>.ts.net/jellyseerr
+        # Serve Jellyseerr at an HTTPS path on your tailnet node
         tailscale serve https /jellyseerr http://jellyseerr:5055
 
-        # Forward Plex’s TCP port for native apps/clients:
-        #   connects to <media-gateway>.ts.net:32400 on the tailnet
-        tailscale serve tcp 32400 ${HOST_GW}:32400
+        # Forward Plex's native TCP port for apps/clients
+        # tailscale serve tcp 32400 ${HOST_GW}:32400
 
-        # (Optional) Also expose Plex Web via HTTPS under a path:
-        #   https://<media-gateway>.ts.net/plex
-        # Comment this out if you prefer using only the TCP mapping above.
+        # Optional: expose Plex Web UI under a path (uncomment if you want it)
         tailscale serve https /plex http://${HOST_GW}:32400
 
-        # Keep container alive
+        # Keep container running
         sleep infinity
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:41234/healthz"] # Check Tailscale has a Tailnet IP and is operational
