@@ -63,6 +63,7 @@ services:
   tailscale-nginx:
     image: tailscale/tailscale:latest
     hostname: tailscale-nginx
+    container_name: tailscale-nginx
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
@@ -78,6 +79,11 @@ services:
 
   nginx:
     image: nginx
+    container_name: nginx
     depends_on:
       - tailscale-nginx
+    volumes:
+      # Mount the single default.conf into the nginx container
+      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
     network_mode: service:tailscale-nginx
+    restart: unless-stopped
