@@ -37,25 +37,25 @@ services:
       - plex
     restart: unless-stopped
 
-  tailscale:
-    image: tailscale/tailscale:latest
-    hostname: tailscale
-    container_name: tailscale
-    environment:
-      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
-    volumes:
-      - ${TAILSCALE_CONFIG}/tailscale/state:/var/lib/tailscale
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-    networks:
-      - arrs
-      - plex
-    restart: unless-stopped
+  # tailscale:
+  #   image: tailscale/tailscale:latest
+  #   hostname: tailscale
+  #   container_name: tailscale
+  #   environment:
+  #     - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+  #     - TS_EXTRA_ARGS=--advertise-tags=tag:container
+  #     - TS_STATE_DIR=/var/lib/tailscale
+  #     - TS_USERSPACE=false
+  #   volumes:
+  #     - ${TAILSCALE_CONFIG}/state:/var/lib/tailscale
+  #   devices:
+  #     - /dev/net/tun:/dev/net/tun
+  #   cap_add:
+  #     - net_admin
+  #   networks:
+  #     - arrs
+  #     - plex
+  #   restart: unless-stopped
 
   jellyseerr:
     image: ghcr.io/fallenbagel/jellyseerr:latest
@@ -65,8 +65,8 @@ services:
       - LOG_LEVEL=debug
       - TZ=${TZ}
       - PORT=5055 #optional
-    # ports:
-    #   - 5055:5055
+    ports:
+      - 5055:5055
     volumes:
       - ${JELLYSEERR_CONFIG}:/app/config
     healthcheck:
@@ -75,10 +75,10 @@ services:
       timeout: 3s
       interval: 15s
       retries: 3
-    # networks:
-    #   - arrs
-    #   - plex
-    network_mode: service:tailscale
-    depends_on:
-      - tailscale
+    networks:
+      - arrs
+      - plex
+    # network_mode: service:tailscale
+    # depends_on:
+    #   - tailscale
     restart: unless-stopped
