@@ -45,8 +45,8 @@ services:
       - LOG_LEVEL=debug
       - TZ=${TZ}
       - PORT=5055 #optional
-    # ports:
-    #   - 5055:5055
+    ports:
+      - 5055:5055
     volumes:
       - ${JELLYSEERR_CONFIG}:/app/config
     healthcheck:
