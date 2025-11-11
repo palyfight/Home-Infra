@@ -24,7 +24,7 @@ services:
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
       - VPN_PORT_FORWARDING=on
       - PORT_FORWARD_ONLY=true
-      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/forwarded_port
+      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/tmp/forwarded_port
     volumes:
       - ${VPN_CONFIG}:/gluetun
     networks:
