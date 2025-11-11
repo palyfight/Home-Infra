@@ -24,7 +24,7 @@ services:
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
       - VPN_PORT_FORWARDING=on
       - PORT_FORWARD_ONLY=true
-      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/tmp/forwarded_port
+      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/forwarded_port
     volumes:
       - ${VPN_CONFIG}:/gluetun
     networks:
@@ -36,13 +36,32 @@ services:
     container_name: qbittorrent
     # use https://ipleak.net/ to verify VPN is working
     network_mode: "service:vpn"       # routes all qBittorrent traffic through VPN container
+    depends_on:
+      - vpn
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - WEBUI_PORT=8080
-      - TORRENTING_PORT=6881
     volumes:
       - ${QBT_CONFIG}:/config
       - ${QBT_HOST_PATH_DATA}:/data/torrents
+    restart: unless-stopped
+
+  gluetun-qbittorrent-port-manager:
+    image: jopiermeier/gluetun-qbittorrent-port-manager:latest
+    container_name: gluetun-qbittorrent-port-manager
+    network_mode: "service:vpn"
+    depends_on:
+      - vpn
+      - qbittorrent
+    environment:
+      - QBITTORRENT_SERVER=localhost
+      - QBITTORRENT_PORT=8080
+      - QBITTORRENT_USER=${QBIT_USER}
+      - QBITTORRENT_PASS=${QBIT_PASS}
+      - PORT_FILE=/gluetun/tmp/forwarded_port
+      - TZ=${TZ}
+    volumes:
+      - ${VPN_CONFIG}:/gluetun
     restart: unless-stopped
