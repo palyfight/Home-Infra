@@ -24,9 +24,10 @@ services:
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
       - VPN_PORT_FORWARDING=on
       - PORT_FORWARD_ONLY=true
-      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/tmp/forwarded_port
+      - VPN_PORT_FORWARDING_STATUS_FILE=/tmp/gluetun/forwarded_port
     volumes:
       - ${VPN_CONFIG}:/gluetun
+      - ${VPN_CONFIG}/tmp:/tmp/gluetun
     networks:
       - qbit
     restart: unless-stopped
@@ -60,8 +61,9 @@ services:
       - QBITTORRENT_PORT=8080
       - QBITTORRENT_USER=${QBIT_USER}
       - QBITTORRENT_PASS=${QBIT_PASS}
-      - PORT_FILE=/gluetun/tmp/forwarded_port
+      - PORT_FILE=/tmp/gluetun/forwarded_port    # or PORT_FILE_PATH if needed
       - TZ=${TZ}
     volumes:
       - ${VPN_CONFIG}:/gluetun
+      - ${VPN_CONFIG}/tmp:/tmp/gluetun:ro
     restart: unless-stopped
