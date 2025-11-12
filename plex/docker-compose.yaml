@@ -23,9 +23,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.plex.rule=Host(`${PLEX_DNS}`)"
-      - "traefik.http.routers.plex.entrypoints=websecure"
+      - "traefik.http.routers.plex.entrypoints=web"
       - "traefik.http.services.plex.loadbalancer.server.port=32400"
-      - "traefik.tcp.routers.plex-tcp.rule=HostSNI(`${PLEX_DNS}`)"
       - "traefik.tcp.routers.plex-tcp.entrypoints=plex-tcp"
       - "traefik.tcp.services.plex-tcp.loadbalancer.server.port=32400"
     restart: unless-stopped
