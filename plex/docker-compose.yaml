@@ -20,21 +20,14 @@ services:
     volumes:
       - ${PLEX_CONFIG}:/config
       - ${PLEX_HOST_PATH_DATA}:/data/media
-    restart: unless-stopped
-
-  tautulli:
-    image: ghcr.io/tautulli/tautulli
-    container_name: tautulli
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${TAUTULLI_CONFIG}:/config
-    ports:
-      - 8181:8181
-    networks:
-      - plex
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plex.rule=Host(`${PLEX_DNS}`)"
+      - "traefik.http.routers.plex.entrypoints=websecure"
+      - "traefik.http.services.plex.loadbalancer.server.port=32400"
+      - "traefik.tcp.routers.plex-tcp.rule=HostSNI(`${PLEX_DNS}`)"
+      - "traefik.tcp.routers.plex-tcp.entrypoints=plex-tcp"
+      - "traefik.tcp.services.plex-tcp.loadbalancer.server.port=32400"
     restart: unless-stopped
 
   jellyseerr:
@@ -79,6 +72,7 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entryPoints.web.address=:80"
+      - "--entryPoints.plex-tcp.address=:32400/tcp"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
@@ -100,6 +94,21 @@ services:
     ports:
       - "80:80"
       - "8888:8080"
+    networks:
+      - plex
+    restart: unless-stopped
+
+  tautulli:
+    image: ghcr.io/tautulli/tautulli
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${TAUTULLI_CONFIG}:/config
+    ports:
+      - 8181:8181
     networks:
       - plex
     restart: unless-stopped
