@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
 
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
+    image: lscr.io/linuxserver/qbittorrent:5.1.2
     container_name: qbittorrent
     # use https://ipleak.net/ to verify VPN is working
     network_mode: "service:vpn"       # routes all qBittorrent traffic through VPN container
