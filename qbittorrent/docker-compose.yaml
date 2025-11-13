@@ -14,8 +14,6 @@ services:
     ports:
       # - 8888:8888/tcp # HTTP proxy
       - 8080:8080     # qBittorrent WebUI (optional, remove if not needed)
-      - 8999:8999       # Torrent TCP
-      - 8999:8999/udp   # Torrent UDP
     environment:
       - TZ=${TZ}
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
