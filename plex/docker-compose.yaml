@@ -43,7 +43,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.jelly.entrypoints=web"
-      - "traefik.http.routers.jelly.rule=Host(`${JELLYSEERR_TAILSCALE_DNS}`)"
+      - "traefik.http.routers.jelly.rule=Host(`${TAILSCALE_DNS}`)"
       - "traefik.http.services.jelly.loadbalancer.server.port=5055"
     networks:
       - arrs
@@ -102,13 +102,4 @@ services:
       - 8181:8181
     networks:
       - plex
-    restart: unless-stopped
-
-  whoami:
-    image: "containous/whoami"
-    container_name: "simple-service"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`tailscale.angelfish-ghost.ts.net`)"
-      - "traefik.http.routers.whoami.entrypoints=web"
     restart: unless-stopped
