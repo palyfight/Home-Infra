@@ -103,3 +103,12 @@ services:
     networks:
       - plex
     restart: unless-stopped
+
+  whoami:
+    image: "containous/whoami"
+    container_name: "simple-service"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`test.angelfish-ghost.ts.net`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+    restart: unless-stopped
