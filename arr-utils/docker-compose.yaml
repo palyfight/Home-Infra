@@ -85,10 +85,12 @@ services:
       - tailscale
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=tailscale"  # ensure Traefik uses this network
       ## HTTP Routers
-      - "traefik.http.routers.wizarr.entrypoints=https"
       - "traefik.http.routers.wizarr.rule=Host(`wizarr.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)"
+      - "traefik.http.routers.wizarr.entrypoints=websecure"
       - "traefik.http.routers.wizarr.tls=true"
+      - "traefik.http.routers.wizarr.tls.certresolver=letsencrypt"
       ## HTTP Services
       - "traefik.http.routers.wizarr.service=wizarr"
       - "traefik.http.services.wizarr-svc.loadbalancer.server.port=5690"
