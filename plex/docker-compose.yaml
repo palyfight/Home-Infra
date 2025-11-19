@@ -35,6 +35,7 @@ services:
       - ${PLEX_HOST_PATH_DATA}:/data/media
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=tailscale"  # ensure Traefik uses this network
       ## HTTP Routers
       - "traefik.http.routers.plex.rule=Host(`plex.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)"
       - "traefik.http.routers.plex.entrypoints=websecure"
