@@ -8,9 +8,6 @@ networks:
   plex:
     external: true
     name: plex
-  tailscale:
-    external: true
-    name: tailscale
 
 services:
   homepage:
