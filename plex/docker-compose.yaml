@@ -45,6 +45,7 @@ services:
       retries: 3
     labels:
       - traefik.enable=true
+      - traefik.docker.network=tailscale  # ensure Traefik uses this network
       - traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)
       - traefik.http.routers.jellyseerr.entrypoints=websecure
       - traefik.http.routers.jellyseerr.tls.certresolver=letsencrypt
@@ -77,9 +78,9 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
-      - TZ=`${TZ}` # Change this to your timezone
-      - CF_API_EMAIL=`${CF_EMAIL}` # Cloudflare account email for Let's Encrypt DNS Challenge
-      - CF_DNS_API_TOKEN=`${CF_TOKEN}` # Cloudflare DNS API Token for Let's Encrypt DNS Challenge
+      - TZ=${TZ} # Change this to your timezone
+      - CF_API_EMAIL=${CF_EMAIL} # Cloudflare account email for Let's Encrypt DNS Challenge
+      - CF_DNS_API_TOKEN=${CF_TOKEN} # Cloudflare DNS API Token for Let's Encrypt DNS Challenge
       - LEGO_DISABLE_CNAME_SUPPORT=true
     depends_on:
       - tailscale
@@ -93,7 +94,7 @@ services:
       # Set up LetsEncrypt
       - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
-      - --certificatesresolvers.letsencrypt.acme.email=`${SSL_EMAIL}`
+      - --certificatesresolvers.letsencrypt.acme.email=${SSL_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/certs/acme.json
       # Set up an insecure listener that redirects all traffic to TLS
       - --entrypoints.web.address=:80
@@ -103,7 +104,7 @@ services:
       # Set up the TLS configuration for our websecure listener
       - --entrypoints.websecure.http.tls=true
       - --entrypoints.websecure.http.tls.certResolver=letsencrypt
-      - --entrypoints.websecure.http.tls.domains[0].main=`${DOMAIN_BASE}`
+      - --entrypoints.websecure.http.tls.domains[0].main=${DOMAIN_BASE}
       - --entrypoints.websecure.http.tls.domains[0].sans=`*${TAILNET_SUFFIX}.${DOMAIN_BASE}`
     labels:
       - "traefik.enable=true"
