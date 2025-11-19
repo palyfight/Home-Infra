@@ -5,6 +5,9 @@ networks:
   plex:
     name: plex
     driver: bridge
+  tailscale:
+    name: tailscale
+    driver: bridge
 
 services:
   plex:
@@ -41,52 +44,15 @@ services:
       interval: 15s
       retries: 3
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.jelly.entrypoints=web"
-      - "traefik.http.routers.jelly.rule=Host(`${TAILSCALE_DNS}`)"
-      - "traefik.http.services.jelly.loadbalancer.server.port=5055"
+      - traefik.enable=true
+      - traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)
+      - traefik.http.routers.jellyseerr.entrypoints=websecure
+      - traefik.http.routers.jellyseerr.tls.certresolver=letsencrypt
+      - traefik.http.services.jellyseerr.loadbalancer.server.port=5055 # Traefik’s server.port should match the container’s internal port (9000), not the host port (9925)
     networks:
       - arrs
       - plex
-    restart: unless-stopped
-
-  traefik:
-    image: "traefik:latest"
-    container_name: "traefik"
-    restart: unless-stopped
-    depends_on:
       - tailscale
-    security_opt:
-      - no-new-privileges:true
-    network_mode: service:tailscale
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entryPoints.web.address=:80"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-
-  tailscale:
-    image: tailscale/tailscale:latest
-    hostname: tailscale
-    container_name: tailscale
-    environment:
-      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
-    volumes:
-      - ${TAILSCALE_CONFIG}/state:/var/lib/tailscale
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-    ports:
-      - "80:80"
-      - "8888:8080"
-    networks:
-      - plex
     restart: unless-stopped
 
   tautulli:
@@ -102,4 +68,70 @@ services:
       - 8181:8181
     networks:
       - plex
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=`${TZ}` # Change this to your timezone
+      - CF_API_EMAIL=`${CF_EMAIL}` # Cloudflare account email for Let's Encrypt DNS Challenge
+      - CF_DNS_API_TOKEN=`${CF_TOKEN}` # Cloudflare DNS API Token for Let's Encrypt DNS Challenge
+      - LEGO_DISABLE_CNAME_SUPPORT=true
+    depends_on:
+      - tailscale
+    network_mode: service:tailscale
+    command:
+      # Tell Traefik to discover containers using the Docker API
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      # Enable the Trafik dashboard
+      - --api.dashboard=true
+      # Set up LetsEncrypt
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.letsencrypt.acme.email=`${SSL_EMAIL}`
+      - --certificatesresolvers.letsencrypt.acme.storage=/certs/acme.json
+      # Set up an insecure listener that redirects all traffic to TLS
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      # Set up the TLS configuration for our websecure listener
+      - --entrypoints.websecure.http.tls=true
+      - --entrypoints.websecure.http.tls.certResolver=letsencrypt
+      - --entrypoints.websecure.http.tls.domains[0].main=`${DOMAIN_BASE}`
+      - --entrypoints.websecure.http.tls.domains[0].sans=`*${TAILNET_SUFFIX}.${DOMAIN_BASE}`
+    labels:
+      - "traefik.enable=true"
+      - 'traefik.http.routers.traefik.rule=Host(`traefik.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)' # Change to your desired domain for Traefik dashboard
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Docker socket to watch for Traefik
+      - ${TRAEFIK_HOME}/traefik-certs:/certs # Docker volume to store the acme file for the Certifactes
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: traefik
+    container_name: tailscale
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ${TAILSCALE_CONFIG}/state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    networks:
+      - tailscale
     restart: unless-stopped
