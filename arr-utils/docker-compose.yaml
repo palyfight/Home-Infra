@@ -92,8 +92,7 @@ services:
       - "traefik.http.routers.wizarr.tls=true"
       - "traefik.http.routers.wizarr.tls.certresolver=letsencrypt"
       ## HTTP Services
-      - "traefik.http.routers.wizarr.service=wizarr"
-      - "traefik.http.services.wizarr-svc.loadbalancer.server.port=5690"
+      - "traefik.http.services.wizarr.loadbalancer.server.port=5690"
     restart: unless-stopped
 
   tdarr:
