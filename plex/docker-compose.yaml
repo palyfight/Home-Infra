@@ -20,6 +20,18 @@ services:
       - TZ=${TZ}
       - VERSION=${VERSION}
       - PLEX_CLAIM=${PLEX_CLAIM}
+      - ADVERTISE_IP=https://plex.${TAILNET_SUFFIX}.${DOMAIN_BASE}:443
+    ports:
+      - 32400:32400/tcp
+      - 32400:32400/udp
+      - 3005:3005/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
     volumes:
       - ${PLEX_CONFIG}:/config
       - ${PLEX_HOST_PATH_DATA}:/data/media
