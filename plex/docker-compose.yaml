@@ -23,6 +23,14 @@ services:
     volumes:
       - ${PLEX_CONFIG}:/config
       - ${PLEX_HOST_PATH_DATA}:/data/media
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.plex.rule=Host(`plex.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)"
+      - "traefik.http.routers.plex.entrypoints=websecure"
+      - "traefik.http.routers.plex.tls.certresolver=letsencrypt"
+      ## HTTP Services
+      - "traefik.http.services.plex.loadbalancer.server.port=32400"
     restart: unless-stopped
 
   jellyseerr:
