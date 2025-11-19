@@ -8,6 +8,9 @@ networks:
   plex:
     external: true
     name: plex
+  tailscale:
+    external: true
+    name: tailscale
 
 services:
   homepage:
@@ -63,6 +66,32 @@ services:
     networks:
       - arrs
       - plex
+    restart: unless-stopped
+
+  wizarr:
+    container_name: wizarr
+    image: ghcr.io/wizarrrr/wizarr
+    environment:
+      - PUID=${PUID} #Set UID
+      - PGID=${PGID} #Set GID
+      - DISABLE_BUILTIN_AUTH=false #Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
+      - TZ=${TZ} #Set your timezone here
+    ports:
+      - 5690:5690
+    volumes:
+      - ${WIZARR_CONFIG}/appdata:/data
+    networks:
+      - plex
+      - tailscale
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.wizarr.entrypoints=https"
+      - "traefik.http.routers.wizarr.rule=Host(`wizarr.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)"
+      - "traefik.http.routers.wizarr.tls=true"
+      ## HTTP Services
+      - "traefik.http.routers.wizarr.service=wizarr"
+      - "traefik.http.services.wizarr-svc.loadbalancer.server.port=5690"
     restart: unless-stopped
 
   tdarr:
