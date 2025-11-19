@@ -19,7 +19,7 @@ services:
       - TZ=${TZ}
       - VERSION=${VERSION}
       - PLEX_CLAIM=${PLEX_CLAIM}
-      - ADVERTISE_IP=https://plex.example.com:443
+      - ADVERTISE_IP=https://plex.${TAILNET_SUFFIX}.${DOMAIN_BASE}:443
     ports:
       - 32400:32400/tcp
       - 32400:32400/udp
