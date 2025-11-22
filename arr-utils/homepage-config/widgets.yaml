@@ -20,17 +20,3 @@
     format:
       timeStyle: short
       dateStyle: medium
-
-# --- NEW: Media Calendar ---
-# This pulls data from your Sonarr/Radarr to show what is airing soon.
-- calendar:
-    showTime: true
-    limit: 5 # How many upcoming items to show
-    integrations:
-      - type: sonarr
-        service_group: Automation
-        service_name: Sonarr
-        # It finds the API key automatically from services.yaml if names match!
-      - type: radarr
-        service_group: Automation
-        service_name: Radarr

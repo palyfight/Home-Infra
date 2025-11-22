@@ -91,5 +91,6 @@
     - Labelarr:
         icon: plex.png
         description: Auto-Labeler
-        server: docker
+        # Points to the 'my-docker' entry defined in docker.yaml
+        server: my-docker
         container: labelarr # Shows CPU/RAM for this specific container
