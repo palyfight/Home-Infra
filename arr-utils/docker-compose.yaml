@@ -22,6 +22,7 @@ services:
     volumes:
       # - ${HOMEPAGE_CONFIG}:/app/config # Make sure your local config directory exists
       - ./homepage-config:/app/config
+      - ./homepage-config/public:/app/public
       - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
       - /mnt/data:/mnt/data # optional, for disk usage widget
     networks:
