@@ -4,7 +4,7 @@
 title: Home Dashboard
 background:
   # Uses a high-quality minimal dark background from Unsplash
-  image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"
+  image: /images/background.jpg
   opacity: 0.5 # Dim the background to make text readable
 
 theme: dark
