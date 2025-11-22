@@ -108,7 +108,7 @@
         container: traefik
         widget:
           type: traefik
-          url: http://traefik:8080
+          url: http://tailscale:8080
     - Gluetun VPN:
         icon: gluetun.png
         description: VPN Tunnel
