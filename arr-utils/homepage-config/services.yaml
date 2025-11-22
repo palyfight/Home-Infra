@@ -16,7 +16,7 @@
         description: Media Server
         widget:
           type: plex
-          url: http://plex:32400
+          url: http://192.168.1.176:32400
           key: zTxeSHCSJwrWbrz1dypK # Find via https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
     - Jellyfin:
         icon: jellyfin.png
@@ -24,7 +24,7 @@
         description: Media Server
         widget:
           type: jellyfin
-          url: http://jellyfin:8096
+          url: http://192.168.1.176:8096
           key: a711976c29604ef78a1615a14bfb7027 # Dashboard > API Keys
           enableBlocks: true # Shows active streams
 
@@ -77,8 +77,10 @@
         href: http://192.168.1.176:8765
         description: Network Speed
         widget:
-          type: speedtest-tracker
-          url: http://192.168.1.176:8765 # Tracker container IP
+          type: speedtest
+          url: http://192.168.1.176:8765
+          # REQUIRED: You must generate an API key in the Speedtest Tracker UI (General > API Tokens)
+          key: 8J7ZaCw7qfbedUhQKedf80jM1ZtcettbBVkeAWqCeef569d7
     - Gluetun VPN:
         icon: gluetun.png
         description: VPN Tunnel
