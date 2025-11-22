@@ -1,7 +1,31 @@
 ---
-# For configuration options and examples, please see:
-# https://gethomepage.dev/configs/settings/
+# /app/config/settings.yaml
 
-providers:
-  openweathermap: openweathermapapikey
-  weatherapi: weatherapiapikey
+title: Home Dashboard
+background:
+  # Uses a high-quality minimal dark background from Unsplash
+  image: https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop
+  opacity: 0.5 # Dim the background to make text readable
+
+theme: dark
+
+color: slate
+
+layout:
+  Media:
+    style: row
+    columns: 3
+  Automation:
+    style: row
+    columns: 4
+  Downloads:
+    style: row
+    columns: 3
+  Infrastructure:
+    style: row
+    columns: 2
+
+headerStyle: clean
+
+# This enables the "ping" dots on the cards to show if a service is online
+statusStyle: dot

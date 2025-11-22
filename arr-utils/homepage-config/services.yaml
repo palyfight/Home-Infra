@@ -1,18 +1,93 @@
 ---
-# For configuration options and examples, please see:
-# https://gethomepage.dev/configs/services/
+# /app/config/services.yaml
 
-- My First Group:
-    - My First Service:
-        href: http://localhost/
-        description: Homepage is awesome
+- Media:
+    - Jellyseerr:
+        icon: jellyseerr.png
+        href: http://192.168.1.176:5055 # Replace with your Host IP
+        description: Request Media
+        widget:
+          type: jellyseerr
+          url: http://jellyseerr:5055
+          key: MTc2MjEwNDg4NjI2MmM0YWU4M2NjLTA5ZGItNDA0MC05NTRlLTU1ZTMwODNhMTcwMg== # Settings > General > API Key
+    - Plex:
+        icon: plex.png
+        href: http://192.168.1.176:32400
+        description: Media Server
+        widget:
+          type: plex
+          url: http://plex:32400
+          key: zTxeSHCSJwrWbrz1dypK # Find via https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+    - Jellyfin:
+        icon: jellyfin.png
+        href: http://192.168.1.176:8096
+        description: Media Server
+        widget:
+          type: jellyfin
+          url: http://jellyfin:8096
+          key: a711976c29604ef78a1615a14bfb7027 # Dashboard > API Keys
+          enableBlocks: true # Shows active streams
 
-- My Second Group:
-    - My Second Service:
-        href: http://localhost/
-        description: Homepage is the best
+- Automation:
+    - Sonarr:
+        icon: sonarr.png
+        href: http://192.168.1.176:8989
+        description: TV Shows
+        widget:
+          type: sonarr
+          url: http://sonarr:8989
+          key: a98a003710254cdc819866079e402758 # Settings > General > API Key
+    - Radarr:
+        icon: radarr.png
+        href: http://192.168.1.176:7878
+        description: Movies
+        widget:
+          type: radarr
+          url: http://radarr:7878
+          key: 41b2cb248ee140de929673d51a33c230 # Settings > General > API Key
+    - Prowlarr:
+        icon: prowlarr.png
+        href: http://192.168.1.176:9696
+        description: Indexer Manager
+        widget:
+          type: prowlarr
+          url: http://prowlarr:9696
+          key: 9741e9a7180c461bbe15142874ab2e03
+    - Tautulli:
+        icon: tautulli.png
+        href: http://192.168.1.176:8181
+        description: Plex Stats
+        widget:
+          type: tautulli
+          url: http://tautulli:8181
+          key: ddd73976dd9147c7bb2ef4c193c85217
 
-- My Third Group:
-    - My Third Service:
-        href: http://localhost/
-        description: Homepage is 😎
+- Downloads:
+    - Tdarr:
+        icon: tdarr.png
+        href: http://192.168.1.176:8265
+        description: Transcoding
+        widget:
+          type: tdarr
+          url: http://tdarr:8265
+
+- Infrastructure:
+    - Speedtest:
+        icon: speedtest-tracker.png
+        href: http://192.168.1.176:8765
+        description: Network Speed
+        widget:
+          type: speedtest-tracker
+          url: http://192.168.1.176:8765 # Tracker container IP
+    - Gluetun VPN:
+        icon: gluetun.png
+        description: VPN Tunnel
+        # This checks the public IP the VPN is currently using
+        widget:
+          type: gluetun
+          url: http://vpn:8000 # Control port for Gluetun
+    - Labelarr:
+        icon: plex.png
+        description: Auto-Labeler
+        server: docker
+        container: labelarr # Shows CPU/RAM for this specific container

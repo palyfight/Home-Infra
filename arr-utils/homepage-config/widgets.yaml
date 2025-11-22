@@ -1,12 +1,36 @@
 ---
-# For configuration options and examples, please see:
-# https://gethomepage.dev/configs/info-widgets/
+# /app/config/widgets.yaml
 
 - resources:
     cpu: true
     memory: true
-    disk: /
+    # disk: /
+    # If you mount your media drive to Homepage, you can add it here:
+    disk: ["/", "/mnt/data"]
+    label: System
+    expanded: true
 
 - search:
-    provider: duckduckgo
+    provider: google
     target: _blank
+    suggestionUrl: http://suggestqueries.google.com/complete/search?client=firefox&q=%QUERY
+
+- datetime:
+    text_size: xl
+    format:
+      timeStyle: short
+      dateStyle: medium
+
+# --- NEW: Media Calendar ---
+# This pulls data from your Sonarr/Radarr to show what is airing soon.
+- calendar:
+    showTime: true
+    limit: 5 # How many upcoming items to show
+    integrations:
+      - type: sonarr
+        service_group: Automation
+        service_name: Sonarr
+        # It finds the API key automatically from services.yaml if names match!
+      - type: radarr
+        service_group: Automation
+        service_name: Radarr
