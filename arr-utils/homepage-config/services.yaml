@@ -6,6 +6,8 @@
         icon: jellyseerr.png
         href: http://192.168.1.176:5055 # Replace with your Host IP
         description: Request Media
+        server: my-docker
+        container: jellyseerr
         widget:
           type: jellyseerr
           url: http://jellyseerr:5055
@@ -14,6 +16,8 @@
         icon: plex.png
         href: http://192.168.1.176:32400
         description: Media Server
+        server: my-docker
+        container: plex
         widget:
           type: plex
           url: http://192.168.1.176:32400
@@ -22,6 +26,8 @@
         icon: jellyfin.png
         href: http://192.168.1.176:8096
         description: Media Server
+        server: my-docker
+        container: jellyfin
         widget:
           type: jellyfin
           url: http://192.168.1.176:8096
@@ -33,6 +39,8 @@
         icon: sonarr.png
         href: http://192.168.1.176:8989
         description: TV Shows
+        server: my-docker
+        container: sonarr
         widget:
           type: sonarr
           url: http://sonarr:8989
@@ -41,6 +49,8 @@
         icon: radarr.png
         href: http://192.168.1.176:7878
         description: Movies
+        server: my-docker
+        container: radarr
         widget:
           type: radarr
           url: http://radarr:7878
@@ -49,6 +59,8 @@
         icon: prowlarr.png
         href: http://192.168.1.176:9696
         description: Indexer Manager
+        server: my-docker
+        container: prowlarr
         widget:
           type: prowlarr
           url: http://prowlarr:9696
@@ -57,6 +69,8 @@
         icon: tautulli.png
         href: http://192.168.1.176:8181
         description: Plex Stats
+        server: my-docker
+        container: tautulli
         widget:
           type: tautulli
           url: http://tautulli:8181
@@ -67,6 +81,8 @@
         icon: tdarr.png
         href: http://192.168.1.176:8265
         description: Transcoding
+        server: my-docker
+        container: tdarr
         widget:
           type: tdarr
           url: http://tdarr:8265
@@ -76,14 +92,28 @@
         icon: speedtest-tracker.png
         href: http://192.168.1.176:8765
         description: Network Speed
+        server: my-docker
+        container: speedtest-tracker
         widget:
           type: speedtest
           url: http://192.168.1.176:8765
           # REQUIRED: You must generate an API key in the Speedtest Tracker UI (General > API Tokens)
           key: 8J7ZaCw7qfbedUhQKedf80jM1ZtcettbBVkeAWqCeef569d7
+    - Traefik:
+        icon: traefik.png
+        href: https://traefik.ts.paly-home.work/dashboard/
+        description: Reverse Proxy
+        # --- NEW: Docker Status ---
+        server: my-docker
+        container: traefik
+        widget:
+          type: traefik
+          url: http://traefik:8080
     - Gluetun VPN:
         icon: gluetun.png
         description: VPN Tunnel
+        server: my-docker
+        container: vpn
         # This checks the public IP the VPN is currently using
         widget:
           type: gluetun
