@@ -48,7 +48,7 @@ services:
       ## HTTP Routers
       - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)"
       - "traefik.http.routers.jellyfin.entrypoints=websecure"
-      - "traefik.http.routers.plex.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.jellyfin.tls.certresolver=letsencrypt"
       ## HTTP Services
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
     networks:
