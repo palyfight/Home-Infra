@@ -8,9 +8,6 @@ networks:
   plex:
     external: true
     name: plex
-  tailscale:
-    external: true
-    name: tailscale
 
 services:
   dockerproxy:
@@ -29,7 +26,6 @@ services:
       - qbit
       - arrs
       - plex
-      - tailscale
     restart: unless-stopped
 
   homepage:
@@ -53,7 +49,6 @@ services:
       - qbit
       - arrs
       - plex
-      - tailscale
     restart: unless-stopped
 
   labelarr:
