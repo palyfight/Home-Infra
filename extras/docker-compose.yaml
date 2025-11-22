@@ -22,6 +22,10 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - APP_KEY=base64:If+vMWX2VsbDp/rww4w7YdAXwe3G39oNhWeC4j5wkNc=
+      - DB_CONNECTION=sqlite
+      - SPEEDTEST_SCHEDULE=0 13 * * 6 #optional - every Saturday at 1pm
+      - PRUNE_RESULTS_OLDER_THAN=30 #optional
     volumes:
       - ${SPEEDTEST_HOME_DIR}:/config
     ports:
