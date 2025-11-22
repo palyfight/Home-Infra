@@ -22,11 +22,17 @@ services:
       - 127.0.0.1:2375:2375
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Mounted as read-only
+    networks:
+      - qbit
+      - arrs
+      - plex
     restart: unless-stopped
 
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
+    depends_on:
+      - dockerproxy
     environment:
       HOMEPAGE_ALLOWED_HOSTS: 192.168.1.176:3000 # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
       PUID: ${PUID} # optional, your user id
