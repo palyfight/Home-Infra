@@ -60,7 +60,7 @@ services:
       - 'traefik.http.middlewares.jellyfin-mw.headers.SSLRedirect=true'
       #### The sslHost option is the host name that is used to redirect http requests to https.
       #### This is the exact URL that will be redirected to, so you can remove the :9999 port if using default SSL port
-      - "traefik.http.middlewares.jellyfin-mw.headers.SSLHost=`jellyfin.${TAILNET_SUFFIX}.${DOMAIN_BASE}`"
+      - "traefik.http.middlewares.jellyfin-mw.headers.SSLHost=jellyfin.${TAILNET_SUFFIX}.${DOMAIN_BASE}"
       #### Set sslForceHost to true and set SSLHost to forced requests to use SSLHost even the ones that are already using SSL.
       #### Note that this uses SSLHost verbatim, so add the port to SSLHost if you are using an alternate port.
       - 'traefik.http.middlewares.jellyfin-mw.headers.SSLForceHost=true'
@@ -81,7 +81,7 @@ services:
       - 'traefik.http.middlewares.jellyfin-mw.headers.customresponseheaders.X-XSS-PROTECTION=1'
       #### The customFrameOptionsValue allows the X-Frame-Options header value to be set with a custom value. This
       #### overrides the FrameDeny option.
-      - "traefik.http.middlewares.jellyfin-mw.headers.customFrameOptionsValue=`allow-from https://jellyfin.${TAILNET_SUFFIX}.${DOMAIN_BASE}`"
+      - "traefik.http.middlewares.jellyfin-mw.headers.customFrameOptionsValue='allow-from https://jellyfin.${TAILNET_SUFFIX}.${DOMAIN_BASE}'"
     networks:
       - tailscale
     restart: unless-stopped
