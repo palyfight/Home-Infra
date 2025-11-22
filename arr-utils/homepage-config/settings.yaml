@@ -1,11 +1,11 @@
 ---
 # /app/config/settings.yaml
 
-title: Home Dashboard
+title: Homelab Dashboard
 background:
   # Uses a high-quality minimal dark background from Unsplash
-  image: /images/background.jpg
-  opacity: 0.5 # Dim the background to make text readable
+  image: /images/background.jpg # "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"
+  opacity: 50 # Dim the background to make text readable
 
 theme: dark
 
@@ -24,6 +24,9 @@ layout:
   Infrastructure:
     style: row
     columns: 2
+  Cloud/Networking:
+    style: row
+    columns: 3
 
 headerStyle: clean
 

@@ -94,3 +94,17 @@
         # Points to the 'my-docker' entry defined in docker.yaml
         server: my-docker
         container: labelarr # Shows CPU/RAM for this specific container
+
+- Cloud/Networking:
+    - Tailscale Admin:
+        icon: si-tailscale # Simple Icons for Tailscale
+        href: https://login.tailscale.com/admin/machines
+        description: Manage Tailnet VPN
+    - Cloudflare Dashboard:
+        icon: si-cloudflare # Simple Icons for Cloudflare
+        href: https://dash.cloudflare.com/f7978bd2710da33adba360ba2aec4afd/paly-home.work/dns/records
+        description: DNS & Proxy Management
+    - Ugreen NAS UI:
+        icon: si-server # Generic server icon
+        href: http://192.168.1.105:9999/desktop/?os=ugospro#/
+        description: NAS Administration Interface
