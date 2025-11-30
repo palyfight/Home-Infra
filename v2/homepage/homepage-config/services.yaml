@@ -2,6 +2,17 @@
 # /app/config/services.yaml
 
 - Media:
+    - Immich:
+        icon: immich.png
+        href: http://192.168.1.176:2283
+        description: Photo Backup & Management
+        server: my-docker
+        container: immich_server
+        widget:
+          type: immich
+          url: http://immich_server:2283
+          key: ToyL6BcVY8CY50i6FElo8aNW5LNBmgWtF4goiMUO3mA # Account Settings > API Keys
+          version: 2 # Optional, but recommended for v2 server
     - Jellyseerr:
         icon: jellyseerr.png
         href: http://192.168.1.176:5055 # Replace with your Host IP
@@ -77,15 +88,15 @@
           key: ddd73976dd9147c7bb2ef4c193c85217
 
 - Downloads:
-    - Tdarr:
-        icon: tdarr.png
-        href: http://192.168.1.176:8265
-        description: Transcoding
-        server: my-docker
-        container: tdarr
-        widget:
-          type: tdarr
-          url: http://tdarr:8265
+    # - Tdarr:
+    #     icon: tdarr.png
+    #     href: http://192.168.1.176:8265
+    #     description: Transcoding
+    #     server: my-docker
+    #     container: tdarr
+    #     widget:
+    #       type: tdarr
+    #       url: http://tdarr:8265
     - qBittorrent:
         icon: qbittorrent.png
         href: http://192.168.1.176:8080
@@ -149,3 +160,21 @@
         icon: si-server # Generic server icon
         href: http://192.168.1.105:9999/desktop/?os=ugospro#/
         description: NAS Administration Interface
+
+- Utilities:
+    - Mealie:
+        icon: mealie.png
+        href: http://192.168.1.176:9925
+        description: Recipe Manager
+        server: my-docker
+        container: mealie
+        widget:
+          type: mealie
+          url: http://mealie:9925
+          key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb25nX3Rva2VuIjp0cnVlLCJpZCI6ImNiYTE2Y2ZhLTQ2NGItNGMzNS05ZmI4LTlmM2Y1MzNhMTRlOSIsIm5hbWUiOiJob21lLW1lZGlhIiwiaW50ZWdyYXRpb25faWQiOiJnZW5lcmljIiwiZXhwIjoxOTIyMjAxNDY2fQ.iEzRkoEY9p25N4VKxLinZ5L9ElUiwunZ1VkkMaH9528 # User Profile > Manage API Tokens
+    - Stirling-PDF:
+        icon: si-stirlingpdf # Using Simple Icons for Stirling-PDF
+        href: http://192.168.1.176:8282
+        description: PDF Tools
+        server: my-docker
+        container: stirling-pdf
