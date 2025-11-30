@@ -43,7 +43,7 @@ services:
       - WEBUI_PORT=8080
     volumes:
       - ${SSD_PATH}/configs/qbittorrent-config:/config
-      - ${NAS_PATH_TORRENTS}:/data/torrents
+      - ${NAS_PATH}:/data
     restart: unless-stopped
 
   gluetun-qbittorrent-port-manager:
