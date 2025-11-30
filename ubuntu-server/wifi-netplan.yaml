@@ -1,0 +1,10 @@
+network:
+  version: 2
+  wifis:
+    wlp2s0: # Replace with your WiFi interface name (from `ip a` command)
+      dhcp4: true
+      access-points:
+        "Foo": # Example WiFi network SSID
+          auth:
+            key-management: "psk"
+            password: "Bar" # Example WiFi network password

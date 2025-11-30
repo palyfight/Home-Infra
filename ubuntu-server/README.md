@@ -24,6 +24,22 @@
 
 # https://github.com/dante1613/Motorcomm-YT6801/blob/e45f2fca4d8bac6445d3ed98b2973b7c1e42eb35/Ubuntu%20-%20instruction.md
 
+After upgrade kernel (ONLY), you need to rebuild driver
+Guide
+
+1. Update headers
+   sudo apt install linux-headers-$(uname -r)
+2. Download driver
+   wget https://github.com/dante1613/Motorcomm-YT6801/raw/main/tuxedo-yt6801/tuxedo-yt6801_1.0.28-1_all.deb
+3. Install driver
+   sudo dpkg -i tuxedo-yt6801_1.0.28-1_all.deb
+4. Creates a list of module dependencies
+   sudo depmod
+5. Check load module
+   lsmod | grep yt6801
+6. Reboot
+   reboot
+
 #
 
 # Install HWE kernel so QSV works:
