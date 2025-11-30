@@ -28,7 +28,6 @@ services:
     networks:
       - qbit
       - arrs
-      - plex
       - immich
       - extras
     restart: unless-stopped
