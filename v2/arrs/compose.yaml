@@ -155,5 +155,4 @@ services:
       - ${SSD_PATH}/labelarr/labelarr-exports:/data/exports  # Mount host directory for export files
     networks:
       - arrs
-      - plex
     restart: unless-stopped
