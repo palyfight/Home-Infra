@@ -1,0 +1,159 @@
+networks:
+  arrs:
+    name: arrs
+    driver: bridge
+  vpn:
+    external: true
+    name: vpn
+  tailscale:
+    external: true
+    name: tailscale
+
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${SSD_PATH}/configs/radarr-config:/config
+      - ${NAS_PATH}:/data
+    ports:
+      - 7878:7878
+    networks:
+      - vpn
+      - arrs
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${SSD_PATH}/configs/sonarr-config:/config
+      - ${NAS_PATH}:/data
+    ports:
+      - 8989:8989
+    networks:
+      - vpn
+      - arrs
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${SSD_PATH}/configs/prowlarr-config:/config
+    ports:
+      - 9696:9696
+    networks:
+      - vpn
+      - arrs
+    restart: unless-stopped
+
+  notifiarr:
+    image: golift/notifiarr:latest
+    container_name: notifiarr
+    hostname: notifiarr
+    volumes:
+      - ${SSD_PATH}/configs/notifiarr-config:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    ports:
+      - 5454:5454
+    networks:
+      - vpn
+      - arrs
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FILE=${LOG_FILE:-none}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=${TZ}
+    volumes:
+      - ${SSD_PATH}/configs/flaresolverr-config:/config
+    ports:
+      - "8191:8191"
+    networks:
+      - arrs
+    restart: unless-stopped
+
+  jellyseerr:
+    image: ghcr.io/fallenbagel/jellyseerr:latest
+    init: true
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ}
+      - PORT=5055 #optional
+    ports:
+      - 5055:5055
+    volumes:
+      - ${SSD_PATH}/configs/jellyseerr-config:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=tailscale  # ensure Traefik uses this network
+      - traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)
+      - traefik.http.routers.jellyseerr.entrypoints=websecure
+      - traefik.http.routers.jellyseerr.tls.certresolver=letsencrypt
+      - traefik.http.services.jellyseerr.loadbalancer.server.port=5055 # Traefik’s server.port should match the container’s internal port (9000), not the host port (9925)
+    networks:
+      - arrs
+      - tailscale
+    restart: unless-stopped
+
+  labelarr:
+    image: ghcr.io/nullable-eth/labelarr:latest
+    container_name: labelarr
+    environment:
+      # Required - Get from Plex Web (F12 → Network → X-Plex-Token)
+      - PLEX_TOKEN=${PLEX_TOKEN}
+      # Required - Get from https://www.themoviedb.org/settings/api
+      - TMDB_READ_ACCESS_TOKEN=${TMDB_READ_ACCESS_TOKEN}
+      # Required - Your Plex server details
+      - PLEX_SERVER=${PLEX_SERVER}
+      - PLEX_PORT=32400
+      - PLEX_REQUIRES_HTTPS=false
+      # Process all libraries (recommended for first-time users)
+      - MOVIE_PROCESS_ALL=true
+      - TV_PROCESS_ALL=true
+      # Optional settings
+      - PROCESS_TIMER=1h
+      - UPDATE_FIELD=genre  # or 'label' but requires plexpass
+      # Optional Radarr/Sonarr integration
+      - USE_RADARR=true
+      - RADARR_URL=http://radarr:7878
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - USE_SONARR=true
+      - SONARR_URL=http://sonarr:8989
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      # Optional export functionality
+      # - EXPORT_LABELS=action,comedy,thriller,documentary,kids
+      # - EXPORT_LOCATION=/data/exports
+    volumes:
+      - ${SSD_PATH}/configs/labelarr-config:/data
+      - ${SSD_PATH}/labelarr/labelarr-exports:/data/exports  # Mount host directory for export files
+    networks:
+      - arrs
+      - plex
+    restart: unless-stopped

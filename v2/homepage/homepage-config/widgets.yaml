@@ -1,0 +1,22 @@
+---
+# /app/config/widgets.yaml
+
+- resources:
+    cpu: true
+    memory: true
+    # disk: /
+    # If you mount your media drive to Homepage, you can add it here:
+    disk: ["/", "/mnt/nas", "/mnt/ssd"]
+    label: System
+    expanded: true
+
+- search:
+    provider: google
+    target: _blank
+    suggestionUrl: http://suggestqueries.google.com/complete/search?client=firefox&q=%QUERY
+
+- datetime:
+    text_size: xl
+    format:
+      timeStyle: short
+      dateStyle: medium

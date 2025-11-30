@@ -1,0 +1,126 @@
+networks:
+  tailscale:
+    name: tailscale
+    driver: bridge
+
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${SSD_PATH}/configs/jellyfin-config:/config
+      - ${NAS_PATH}:/data/media
+    ports:
+      - 8096:8096
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=tailscale"  # ensure Traefik uses this network
+      ## HTTP Routers
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls.certresolver=letsencrypt"
+      ## HTTP Services
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+      ## Middleware
+      - 'traefik.http.routers.jellyfin.middlewares=jellyfin-mw'
+      #### The customResponseHeaders option lists the Header names and values to apply to the response.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.customResponseHeaders.X-Robots-Tag=noindex,nofollow,nosnippet,noarchive,notranslate,noimageindex'
+      #### The sslRedirect is set to true, then only allow https requests.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.SSLRedirect=true'
+      #### The sslHost option is the host name that is used to redirect http requests to https.
+      #### This is the exact URL that will be redirected to, so you can remove the :9999 port if using default SSL port
+      - "traefik.http.middlewares.jellyfin-mw.headers.SSLHost=jellyfin.${TAILNET_SUFFIX}.${DOMAIN_BASE}"
+      #### Set sslForceHost to true and set SSLHost to forced requests to use SSLHost even the ones that are already using SSL.
+      #### Note that this uses SSLHost verbatim, so add the port to SSLHost if you are using an alternate port.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.SSLForceHost=true'
+      #### The stsSeconds is the max-age of the Strict-Transport-Security header. If set to 0, would NOT include the header.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.STSSeconds=315360000'
+      #### The stsIncludeSubdomains is set to true, the includeSubDomains directive will be
+      #### appended to the Strict-Transport-Security header.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.STSIncludeSubdomains=true'
+      #### Set stsPreload to true to have the preload flag appended to the Strict-Transport-Security header.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.STSPreload=true'
+      #### Set forceSTSHeader to true, to add the STS header even when the connection is HTTP.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.forceSTSHeader=true'
+      #### Set frameDeny to true to add the X-Frame-Options header with the value of DENY.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.frameDeny=true'
+      #### Set contentTypeNosniff to true to add the X-Content-Type-Options header with the value nosniff.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.contentTypeNosniff=true'
+      #### Set browserXssFilter to true to add the X-XSS-Protection header with the value 1; mode=block.
+      - 'traefik.http.middlewares.jellyfin-mw.headers.customresponseheaders.X-XSS-PROTECTION=1'
+      #### The customFrameOptionsValue allows the X-Frame-Options header value to be set with a custom value. This
+      #### overrides the FrameDeny option.
+      - "traefik.http.middlewares.jellyfin-mw.headers.customFrameOptionsValue='allow-from https://jellyfin.${TAILNET_SUFFIX}.${DOMAIN_BASE}'"
+    networks:
+      - tailscale
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - CF_API_EMAIL=${CF_EMAIL} # Cloudflare account email for Let's Encrypt DNS Challenge
+      - CF_DNS_API_TOKEN=${CF_TOKEN} # Cloudflare DNS API Token for Let's Encrypt DNS Challenge
+      - LEGO_DISABLE_CNAME_SUPPORT=true
+    depends_on:
+      - tailscale
+    network_mode: service:tailscale
+    command:
+      # Tell Traefik to discover containers using the Docker API
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      # Enable the Trafik dashboard
+      - --api.dashboard=true
+      # Set up LetsEncrypt
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.letsencrypt.acme.email=${SSL_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/certs/acme.json
+      # Set up an insecure listener that redirects all traffic to TLS
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      # Set up the TLS configuration for our websecure listener
+      - --entrypoints.websecure.http.tls=true
+      - --entrypoints.websecure.http.tls.certResolver=letsencrypt
+      - --entrypoints.websecure.http.tls.domains[0].main=${DOMAIN_BASE}
+      - --entrypoints.websecure.http.tls.domains[0].sans=`*${TAILNET_SUFFIX}.${DOMAIN_BASE}`
+    labels:
+      - "traefik.enable=true"
+      - 'traefik.http.routers.traefik.rule=Host(`traefik.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)' # Change to your desired domain for Traefik dashboard
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Docker socket to watch for Traefik
+      - ${SSD_PATH}/traefik/traefik-certs:/certs # Docker volume to store the acme file for the Certifactes
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: traefik
+    container_name: tailscale
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ${SSD_PATH}/tailscale/state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    networks:
+      - tailscale
+    restart: unless-stopped

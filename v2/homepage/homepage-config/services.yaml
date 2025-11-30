@@ -86,6 +86,18 @@
         widget:
           type: tdarr
           url: http://tdarr:8265
+    - qBittorrent:
+        icon: qbittorrent.png
+        href: http://192.168.1.176:8080
+        description: Downloader
+        # --- NEW: Docker Status (qBittorrent is likely inside the 'vpn' container group, so we will monitor the 'vpn' container instead) ---
+        server: my-docker
+        container: vpn
+        widget:
+          type: qbittorrent
+          url: http://vpn:8080
+          username: { your-username } # Replace with your qBittorrent username
+          password: { your-password } # Replace with your qBittorrent password
 
 - Infrastructure:
     - Speedtest:
@@ -114,6 +126,15 @@
         # Points to the 'my-docker' entry defined in docker.yaml
         server: my-docker
         container: labelarr # Shows CPU/RAM for this specific container
+    - Glances:
+        icon: si-glances # Use Simple Icon for Glances
+        href: http://192.168.1.176:61208
+        description: System & GPU Monitor
+        server: my-docker
+        container: glances
+        widget:
+          type: glances
+          url: http://glances:61208
 
 - Cloud/Networking:
     - Tailscale Admin:

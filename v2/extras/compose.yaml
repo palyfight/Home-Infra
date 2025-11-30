@@ -1,0 +1,93 @@
+networks:
+  tailscale:
+    external: true
+    name: tailscale
+  extras:
+    name: extras
+    driver: bridge
+
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest 
+    container_name: mealie
+    ports:
+        - "9925:9000"
+    deploy:
+      resources:
+        limits:
+          memory: 1000M
+    volumes:
+      - ${SSD_PATH}/mealie-data:/app/data/
+    environment:
+      # Set Backend ENV Variables Here
+      ALLOW_SIGNUP: "false"
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      BASE_URL: https://mealie.ts.paly-home.work
+      # Database Settings
+      DB_ENGINE: postgres
+      POSTGRES_USER: mealie
+      POSTGRES_PASSWORD: mealie
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: mealie
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tailscale
+      - extras
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=tailscale  # ensure Traefik uses this network
+      - traefik.http.routers.mealie.rule=Host(`mealie.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)
+      - traefik.http.routers.mealie.entrypoints=websecure
+      - traefik.http.routers.mealie.tls.certresolver=letsencrypt
+      - traefik.http.services.mealie.loadbalancer.server.port=9000 # Traefik’s server.port should match the container’s internal port (9000), not the host port (9925)
+    restart: unless-stopped
+
+  postgres:
+    container_name: postgres
+    image: postgres:17
+    volumes:
+      - ${SSD_PATH}/mealie-pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: mealie
+      POSTGRES_USER: mealie
+      PGUSER: mealie
+      POSTGRES_DB: mealie
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - extras
+    restart: unless-stopped
+
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    environment:
+      - DISABLE_ADDITIONAL_FEATURES=false
+      - LANGS=en_CA
+    volumes:
+      - ${SSD_PATH}/configs/extras/stirlingpdf/trainingData:/usr/share/tessdata # Required for extra OCR languages
+      - ${SSD_PATH}/configs/extras/stirlingpdf/extraConfigs:/configs
+      - ${SSD_PATH}/configs/extras/stirlingpdf/customFiles:/customFiles/
+      - ${SSD_PATH}/configs/extras/stirlingpdf/logs:/logs/
+      - ${SSD_PATH}/configs/extras/stirlingpdf/pipeline:/pipeline/
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=tailscale  # ensure Traefik uses this network
+      - traefik.http.routers.stirling.rule=Host(`stirling.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)
+      - traefik.http.routers.stirling.entrypoints=websecure
+      - traefik.http.routers.stirling.tls.certresolver=letsencrypt
+      - traefik.http.services.stirling.loadbalancer.server.port=8080 # Traefik’s server.port should match the container’s internal port (8080), not the host port (8282)
+    ports:
+      - '8282:8080'
+    networks:
+      - tailscale
+      - extras
+    restart: unless-stopped

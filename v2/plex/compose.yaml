@@ -1,0 +1,28 @@
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=${VERSION}
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    volumes:
+      - ${SSD_PATH}/configs/plex-config:/config
+      - ${NAS_PATH}:/data/media
+    restart: unless-stopped
+
+  tautulli:
+    image: ghcr.io/tautulli/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${SSD_PATH}/configs/tautulli-config:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped

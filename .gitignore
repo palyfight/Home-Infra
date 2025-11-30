@@ -4,3 +4,6 @@ plex/.env
 
 declutarr_config.yaml
 homepage-config/logs
+
+.env
+.log
