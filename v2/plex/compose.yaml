@@ -11,7 +11,7 @@ services:
       - PLEX_CLAIM=${PLEX_CLAIM}
     volumes:
       - ${SSD_PATH}/configs/plex-config:/config
-      - ${NAS_PATH}:/data/media
+      - ${NAS_PATH}:/data
     restart: unless-stopped
 
   tautulli:
