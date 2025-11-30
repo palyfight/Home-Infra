@@ -2,9 +2,6 @@ networks:
   arrs:
     external: true
     name: arrs
-  plex:
-    external: true
-    name: plex
 
 services:
   tdarr:
@@ -36,7 +33,6 @@ services:
       - 8266:8266 # server port
     networks:
       - arrs
-      - plex
     devices:
       - /dev/dri:/dev/dri
     restart: unless-stopped

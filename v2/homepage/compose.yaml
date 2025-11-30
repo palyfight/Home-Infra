@@ -5,9 +5,6 @@ networks:
   qbit:
     external: true
     name: qbit
-  plex:
-    external: true
-    name: plex
   immich:
     external: true
     name: immich
@@ -57,7 +54,6 @@ services:
     networks:
       - qbit
       - arrs
-      - plex
       - immich
       - extras
     restart: unless-stopped
