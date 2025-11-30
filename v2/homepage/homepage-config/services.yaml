@@ -137,16 +137,6 @@
         # Points to the 'my-docker' entry defined in docker.yaml
         server: my-docker
         container: labelarr # Shows CPU/RAM for this specific container
-    - Glances:
-        icon: si-glances # Use Simple Icon for Glances
-        href: http://192.168.1.176:61208
-        description: System & GPU Monitor
-        server: my-docker
-        container: glances
-        widget:
-          type: glances
-          url: http://192.168.1.176:61208
-          version: 4
 
 - Cloud/Networking:
     - Tailscale Admin:
@@ -169,10 +159,6 @@
         description: Recipe Manager
         server: my-docker
         container: mealie
-        widget:
-          type: mealie
-          url: http://192.168.1.176:9925
-          key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb25nX3Rva2VuIjp0cnVlLCJpZCI6ImNiYTE2Y2ZhLTQ2NGItNGMzNS05ZmI4LTlmM2Y1MzNhMTRlOSIsIm5hbWUiOiJob21lLW1lZGlhIiwiaW50ZWdyYXRpb25faWQiOiJnZW5lcmljIiwiZXhwIjoxOTIyMjAxNDY2fQ.iEzRkoEY9p25N4VKxLinZ5L9ElUiwunZ1VkkMaH9528 # User Profile > Manage API Tokens
     - Stirling-PDF:
         icon: si-stirlingpdf # Using Simple Icons for Stirling-PDF
         href: http://192.168.1.176:8282
