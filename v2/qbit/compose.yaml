@@ -14,11 +14,22 @@ services:
     ports:
       - 8080:8080     # qBittorrent WebUI (optional, remove if not needed)
     environment:
+      # Timezone
       - TZ=${TZ}
+      
+      # VPN / WireGuard settings
+      # - SERVER_HOSTNAMES=ch-04.protonvpn.net
+      # - WIREGUARD_ADDRESSES=10.2.0.2/32
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      
+      # DNS settings — using DOH instead of DOT (encrypted)
+      - DNS_UPSTREAM_RESOLVER_TYPE=doh
+      - DNS_UPSTREAM_RESOLVERS=cloudflare,google,quad9,libredns 
+      
+      # Firewall / port-forwarding
       - VPN_PORT_FORWARDING=on
       - PORT_FORWARD_ONLY=true
       - VPN_PORT_FORWARDING_STATUS_FILE=${VPN_PORT_FORWARDING_STATUS_FILE}
