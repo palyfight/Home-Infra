@@ -49,11 +49,6 @@ services:
       - vpn
     restart: unless-stopped
     logging: *default-logging
-    healthcheck:
-      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
