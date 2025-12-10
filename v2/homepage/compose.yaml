@@ -57,25 +57,6 @@ services:
       - extras
     restart: unless-stopped
 
-  glances:
-    image: nicolargo/glances:latest-full
-    container_name: glances
-    # Use host PID namespace to see full system processes and stats
-    pid: host 
-    environment:
-      - GLANCES_OPT=-w # Run Glances in web server mode
-      - TZ=${TZ}
-    ports:
-      # Glances Web UI Port
-      - 61208:61208 
-    volumes:
-      # Access to Docker Socket for container stats (like you did for Homepage)
-      - /var/run/docker.sock:/var/run/docker.sock:ro 
-      # *** ESSENTIAL FOR INTEL GPU MONITORING ***
-      # Gives Glances access to the integrated GPU device files on the host
-      - /dev/dri:/dev/dri 
-    restart: unless-stopped
-
   speedtest-tracker:
     image: lscr.io/linuxserver/speedtest-tracker:latest
     container_name: speedtest-tracker
