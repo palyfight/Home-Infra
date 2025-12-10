@@ -3,6 +3,12 @@ networks:
     name: vpn
     driver: bridge
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   vpn:
     image: qmcgaw/gluetun
@@ -22,15 +28,16 @@ services:
       # - WIREGUARD_ADDRESSES=10.2.0.2/32
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
-      # - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - OPENVPN_USER=${OPENVPN_USER}
-      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      # - OPENVPN_USER=${OPENVPN_USER}
+      # - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
       
       # DNS settings — using DOH instead of DOT (encrypted)
       # - DNS_UPSTREAM_RESOLVER_TYPE=doh
       - DNS_UPSTREAM_RESOLVERS=cloudflare,google,quad9,libredns 
-      
+      - DNS_ADDRESS=127.0.0.11
+
       # Firewall / port-forwarding
       - VPN_PORT_FORWARDING=on
       - PORT_FORWARD_ONLY=true
@@ -41,6 +48,12 @@ services:
     networks:
       - vpn
     restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -48,7 +61,8 @@ services:
     # use https://ipleak.net/ to verify VPN is working
     network_mode: "service:vpn"       # routes all qBittorrent traffic through VPN container
     depends_on:
-      - vpn
+      vpn:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -58,6 +72,7 @@ services:
       - ${SSD_PATH}/configs/qbittorrent-config:/config
       - ${NAS_PATH}:/data
     restart: unless-stopped
+    logging: *default-logging
 
   gluetun-qbittorrent-port-manager:
     image: jopiermeier/gluetun-qbittorrent-port-manager:latest
