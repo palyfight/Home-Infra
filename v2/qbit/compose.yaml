@@ -45,7 +45,7 @@ services:
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
       - ${SSD_PATH}/configs/vpn-config/tmp:/tmp/gluetun
-      - ./config.toml:/gluetun/auth/config.toml:ro  # optional custom config
+      - ./config.toml:/gluetun/auth/config.toml:ro,z
     networks:
       - vpn
     restart: unless-stopped

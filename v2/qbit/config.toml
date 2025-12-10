@@ -1,4 +1,4 @@
 [[roles]]
-name = "qbittorrent"
+name = "Homepage"
 routes = ["GET /v1/publicip/ip"]
 auth = "none"
