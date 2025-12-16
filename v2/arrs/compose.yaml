@@ -156,3 +156,27 @@ services:
     networks:
       - arrs
     restart: unless-stopped
+
+  tracearr:
+    image: ghcr.io/connorgallopo/tracearr:supervised
+    ports:
+      - "${PORT:-3333}:3000"
+    environment:
+      - TZ=${TZ:-UTC}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      # Optional: Override auto-generated secrets
+      # - JWT_SECRET=${JWT_SECRET}
+      # - COOKIE_SECRET=${COOKIE_SECRET}
+    volumes:
+      - ${SSD_PATH}/tracearr/postgres:/data/postgres
+      - ${SSD_PATH}/tracearr/redis:/data/redis
+      - ${SSD_PATH}/tracearr/data:/data/tracearr
+    networks:
+      - arrs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
