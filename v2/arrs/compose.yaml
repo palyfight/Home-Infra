@@ -181,3 +181,20 @@ services:
       timeout: 10s
       start_period: 60s
       retries: 3
+  
+  unpackerr:
+    image: golift/unpackerr
+    container_name: unpackerr
+    user: 1000:1000
+    environment:
+      - TZ=${TZ}
+      - UN_LOG_FILE=/data/unpackerr.log
+      - UN_SONARR_0_URL=http://sonarr:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - UN_RADARR_0_URL=http://radarr:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+    volumes:
+      - ${NAS_PATH}:/data
+    networks:
+      - arrs
+    restart: unless-stopped
