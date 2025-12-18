@@ -31,7 +31,6 @@ services:
       - SHADOWSOCKS=off
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
-      # - ${SSD_PATH}/configs/vpn-config/tmp:/tmp/gluetun
     networks:
       - vpn
     restart: unless-stopped
