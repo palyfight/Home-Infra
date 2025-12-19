@@ -29,6 +29,11 @@ services:
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
       - HTTPPROXY=off
       - SHADOWSOCKS=off
+      # Fix for annoying healthcheck issues
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:443
+      - HEALTH_DURATION_TO_WAIT_AFTER_SUCCESS=15s
+      - HEALTH_VPN_DURATION_INITIAL=15s
+      - HEALTH_VPN_DURATION_ADDITIONAL=10s
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
       - ./auth:/gluetun/auth
