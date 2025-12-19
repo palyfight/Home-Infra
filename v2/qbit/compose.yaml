@@ -13,7 +13,7 @@ services:
       - /dev/net/tun:/dev/net/tun
     ports:
       - 8080:8080/tcp # qbittorrent
-    environment:
+    environment: # https://www.reddit.com/r/gluetun/comments/1kpbfs2/the_definitive_howto_for_setting_up_protonvpn/
       - TZ=${TZ}
       - UPDATER_PERIOD=24h
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
@@ -30,7 +30,7 @@ services:
       - HTTPPROXY=off
       - SHADOWSOCKS=off
       # Fix for annoying healthcheck issues
-      - HEALTH_TARGET_ADDRESS=1.1.1.1:443
+      - HEALTH_TARGET_ADDRESS=google.com:443
       - HEALTH_DURATION_TO_WAIT_AFTER_SUCCESS=15s
       - HEALTH_VPN_DURATION_INITIAL=15s
       - HEALTH_VPN_DURATION_ADDITIONAL=10s
