@@ -34,6 +34,7 @@ services:
       - HEALTH_DURATION_TO_WAIT_AFTER_SUCCESS=15s
       - HEALTH_VPN_DURATION_INITIAL=15s
       - HEALTH_VPN_DURATION_ADDITIONAL=10s
+      - WIREGUARD_MTU=1300 # https://github.com/qdm12/gluetun/issues/2533#issuecomment-2456720804
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
       - ./auth:/gluetun/auth
