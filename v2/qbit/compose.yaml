@@ -14,6 +14,7 @@ services:
     ports:
       - 8080:8080/tcp # qbittorrent
     environment:
+      # https://www.reddit.com/r/gluetun/comments/1kpbfs2/the_definitive_howto_for_setting_up_protonvpn/
       - TZ=${TZ}
       - UPDATER_PERIOD=24h
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
@@ -27,6 +28,15 @@ services:
       - VPN_PORT_FORWARDING=on
       - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c 'wget -O- --retry-connrefused --post-data "json={\"listen_port\":{{PORTS}}}" http://127.0.0.1:8080/api/v2/app/setPreferences 2>&1'
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      # Better to turn off unneeded services
+      - HTTPPROXY=off
+      - SHADOWSOCKS=off
+      # Fix for annoying healthcheck issues: https://www.reddit.com/r/gluetun/comments/1lnwt1f/random_healthcheck_errors/
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:443
+      - HEALTH_DURATION_TO_WAIT_AFTER_SUCCESS=15s
+      - HEALTH_VPN_DURATION_INITIAL=15s
+      - HEALTH_VPN_DURATION_ADDITIONAL=10s
+      - WIREGUARD_MTU=1300 # https://github.com/qdm12/gluetun/issues/2533#issuecomment-2456720804
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
     networks:
