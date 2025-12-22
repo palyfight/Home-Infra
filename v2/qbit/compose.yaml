@@ -16,7 +16,10 @@ services:
     environment:
       # https://www.reddit.com/r/gluetun/comments/1kpbfs2/the_definitive_howto_for_setting_up_protonvpn/
       - TZ=${TZ}
+      # Update related variables: https://www.reddit.com/r/gluetun/comments/1owlrxw/proton_updating_setup/
       - UPDATER_PERIOD=24h
+      - UPDATER_PROTONVPN_USERNAME=${PROTONVPN_USERNAME} #email associated to account
+      - UPDATER_PROTONVPN_PASSWORD=${PROTONVPN_PASSWORD} # account password
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
       - BLOCK_MALICIOUS=off
