@@ -4,9 +4,69 @@ networks:
     driver: bridge
 
 services:
-  vpn:
-    image: qmcgaw/gluetun:v3.40.3
-    container_name: vpn
+  # vpn:
+  #   image: qmcgaw/gluetun:latest
+  #   container_name: vpn
+  #   cap_add:
+  #     - NET_ADMIN
+  #   devices:
+  #     - /dev/net/tun:/dev/net/tun
+  #   ports:
+  #     - 8080:8080/tcp # qbittorrent
+  #   environment:
+  #     # https://www.reddit.com/r/gluetun/comments/1kpbfs2/the_definitive_howto_for_setting_up_protonvpn/
+  #     - TZ=${TZ}
+  #     # Update related variables: https://www.reddit.com/r/gluetun/comments/1owlrxw/proton_updating_setup/
+  #     - UPDATER_PERIOD=24h
+  #     # - UPDATER_PROTONVPN_EMAIL=${PROTONVPN_EMAIL} #email associated to account
+  #     # - UPDATER_PROTONVPN_PASSWORD=${PROTONVPN_PASSWORD} # account password
+  #     - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+  #     - VPN_TYPE=${VPN_TYPE}
+  #     - BLOCK_MALICIOUS=off
+  #     - OPENVPN_USER=${OPENVPN_USER}
+  #     - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+  #     - OPENVPN_CIPHERS=AES-256-GCM
+  #     - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+  #     - PORT_FORWARD_ONLY=on
+  #     - VPN_PORT_FORWARDING=on
+  #     - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c 'wget -O- --retry-connrefused --post-data "json={\"listen_port\":{{PORTS}}}" http://127.0.0.1:8080/api/v2/app/setPreferences 2>&1'
+  #     - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+  #     # Better to turn off unneeded services
+  #     - HTTPPROXY=off
+  #     - SHADOWSOCKS=off
+  #     # Fix for annoying healthcheck issues: https://www.reddit.com/r/gluetun/comments/1lnwt1f/random_healthcheck_errors/
+  #     - HEALTH_TARGET_ADDRESS=1.1.1.1:443
+  #     - HEALTH_DURATION_TO_WAIT_AFTER_SUCCESS=15s
+  #     - HEALTH_VPN_DURATION_INITIAL=15s
+  #     - HEALTH_VPN_DURATION_ADDITIONAL=10s
+  #     - WIREGUARD_MTU=1300 # https://github.com/qdm12/gluetun/issues/2533#issuecomment-2456720804
+  #   volumes:
+  #     - ${SSD_PATH}/configs/vpn-config:/gluetun
+  #     - ./auth:/gluetun/auth # for openvpn auth file: https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/control-server.md#authentication
+  #   networks:
+  #     - vpn
+  #   restart: unless-stopped
+
+  # qbittorrent:
+  #   image: lscr.io/linuxserver/qbittorrent:latest
+  #   container_name: qbittorrent
+  #   depends_on:
+  #     vpn:
+  #       condition: service_healthy
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
+  #     - WEBUI_PORT=8080
+  #   volumes:
+  #     - ${SSD_PATH}/configs/qbittorrent-config:/config
+  #     - ${NAS_PATH}:/data
+  #   restart: unless-stopped
+  #   network_mode: "service:vpn"
+
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
     cap_add:
       - NET_ADMIN
     devices:
@@ -14,19 +74,15 @@ services:
     ports:
       - 8080:8080/tcp # qbittorrent
     environment:
-      # https://www.reddit.com/r/gluetun/comments/1kpbfs2/the_definitive_howto_for_setting_up_protonvpn/
       - TZ=${TZ}
-      # Update related variables: https://www.reddit.com/r/gluetun/comments/1owlrxw/proton_updating_setup/
       - UPDATER_PERIOD=24h
-      - UPDATER_PROTONVPN_EMAIL=${PROTONVPN_EMAIL} #email associated to account
-      - UPDATER_PROTONVPN_PASSWORD=${PROTONVPN_PASSWORD} # account password
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
       - BLOCK_MALICIOUS=off
       - OPENVPN_USER=${OPENVPN_USER}
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
       - OPENVPN_CIPHERS=AES-256-GCM
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      # - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - PORT_FORWARD_ONLY=on
       - VPN_PORT_FORWARDING=on
       - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c 'wget -O- --retry-connrefused --post-data "json={\"listen_port\":{{PORTS}}}" http://127.0.0.1:8080/api/v2/app/setPreferences 2>&1'
@@ -34,24 +90,16 @@ services:
       # Better to turn off unneeded services
       - HTTPPROXY=off
       - SHADOWSOCKS=off
-      # Fix for annoying healthcheck issues: https://www.reddit.com/r/gluetun/comments/1lnwt1f/random_healthcheck_errors/
-      - HEALTH_TARGET_ADDRESS=1.1.1.1:443
-      - HEALTH_DURATION_TO_WAIT_AFTER_SUCCESS=15s
-      - HEALTH_VPN_DURATION_INITIAL=15s
-      - HEALTH_VPN_DURATION_ADDITIONAL=10s
-      - WIREGUARD_MTU=1300 # https://github.com/qdm12/gluetun/issues/2533#issuecomment-2456720804
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
       - ./auth:/gluetun/auth # for openvpn auth file: https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/control-server.md#authentication
-    networks:
-      - vpn
     restart: unless-stopped
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     depends_on:
-      vpn:
+      gluetun:
         condition: service_healthy
     environment:
       - PUID=${PUID}
@@ -62,4 +110,4 @@ services:
       - ${SSD_PATH}/configs/qbittorrent-config:/config
       - ${NAS_PATH}:/data
     restart: unless-stopped
-    network_mode: "service:vpn"
+    network_mode: "service:gluetun"
