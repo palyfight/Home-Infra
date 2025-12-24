@@ -90,6 +90,12 @@ services:
       # Better to turn off unneeded services
       - HTTPPROXY=off
       - SHADOWSOCKS=off
+      # Fix for annoying healthcheck issues: https://www.reddit.com/r/gluetun/comments/1lnwt1f/random_healthcheck_errors/
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:443
+      - HEALTH_DURATION_TO_WAIT_AFTER_SUCCESS=15s
+      - HEALTH_VPN_DURATION_INITIAL=15s
+      - HEALTH_VPN_DURATION_ADDITIONAL=10s
+      - DNS_UPSTREAM_RESOLVERS=cloudflare,google,quad9,opendns
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
       - ./auth:/gluetun/auth # for openvpn auth file: https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/control-server.md#authentication
