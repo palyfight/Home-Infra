@@ -15,7 +15,6 @@ services:
       - 8080:8080/tcp # qbittorrent
     environment:
       - TZ=${TZ}
-      - UPDATER_PERIOD=24h
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
       - BLOCK_MALICIOUS=off
@@ -35,7 +34,8 @@ services:
       - UPDATER_PROTONVPN_EMAIL=${PROTONVPN_EMAIL} #email associated to account
       - UPDATER_PROTONVPN_PASSWORD=${PROTONVPN_PASSWORD} # account password
       # DNS settings: https://github.com/qdm12/gluetun/releases/tag/v3.41.0
-      - DNS_UPSTREAM_RESOLVER_TYPE=dot
+      - DNS_UPSTREAM_RESOLVER_TYPE=doh # https://github.com/qdm12/gluetun/issues/2942#issuecomment-3684906943
+      - DNS_UPSTREAM_RESOLVERS=google,quad9,opendns
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
       - ./auth:/gluetun/auth # for openvpn auth file: https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/control-server.md#authentication
