@@ -198,3 +198,37 @@ services:
     networks:
       - arrs
     restart: unless-stopped
+
+  ytdl-sub:
+    # The GUI image variant:
+    image: ghcr.io/jmbannon/ytdl-sub-gui:latest
+    # Or use the headless image variant:
+    # image: ghcr.io/jmbannon/ytdl-sub:latest
+    # For CPU/GPU passthrough, use the GUI image above or the headless Ubuntu image:
+    # image: ghcr.io/jmbannon/ytdl-sub:ubuntu-latest
+    container_name: ytdl-sub
+    environment:
+      - TZ=${TZ}
+      # Set these as appropriate so your users can access the downloaded files in
+      # your library:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - ${SSD_PATH}/configs/ytdl-config:/config
+      - ${NAS_PATH}/media/tv:/tv_shows
+      - ${NAS_PATH}/media/movies:/movies
+    # Not necessary for the headless image variant:
+    ports:
+      - 8443:8443
+    # Optionally passthrough the CPU for hardware acceleration:
+    # devices:
+    #   - /dev/dri:/dev/dri
+    # Optionally passthrough the GPU:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: ["gpu"]
+    networks:
+      - arrs
+    restart: unless-stopped
