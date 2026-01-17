@@ -103,10 +103,10 @@
         description: Downloader
         # --- NEW: Docker Status (qBittorrent is likely inside the 'vpn' container group, so we will monitor the 'vpn' container instead) ---
         server: my-docker
-        container: vpn
+        container: gluetun
         widget:
           type: qbittorrent
-          url: http://vpn:8080
+          url: http://192.168.1.176:8080
           username: { your-username } # Replace with your qBittorrent username
           password: { your-password } # Replace with your qBittorrent password
 
@@ -126,11 +126,11 @@
         icon: gluetun.png
         description: VPN Tunnel
         server: my-docker
-        container: vpn
+        container: gluetun
         # This checks the public IP the VPN is currently using
         widget:
           type: gluetun
-          url: http://vpn:8000 # Control port for Gluetun
+          url: http://192.168.1.176:8000 # Control port for Gluetun
     - Labelarr:
         icon: plex.png
         description: Auto-Labeler

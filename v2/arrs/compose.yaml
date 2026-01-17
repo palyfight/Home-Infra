@@ -2,9 +2,6 @@ networks:
   arrs:
     name: arrs
     driver: bridge
-  vpn:
-    external: true
-    name: vpn
   tailscale:
     external: true
     name: tailscale
@@ -23,7 +20,6 @@ services:
     ports:
       - 7878:7878
     networks:
-      - vpn
       - arrs
     restart: unless-stopped
 
@@ -40,7 +36,6 @@ services:
     ports:
       - 8989:8989
     networks:
-      - vpn
       - arrs
     restart: unless-stopped
 
@@ -56,7 +51,6 @@ services:
     ports:
       - 9696:9696
     networks:
-      - vpn
       - arrs
     restart: unless-stopped
 
@@ -71,7 +65,6 @@ services:
     ports:
       - 5454:5454
     networks:
-      - vpn
       - arrs
     restart: unless-stopped
 

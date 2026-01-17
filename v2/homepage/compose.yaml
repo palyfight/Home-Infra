@@ -2,9 +2,6 @@ networks:
   arrs:
     external: true
     name: arrs
-  vpn:
-    external: true
-    name: vpn
   immich:
     external: true
     name: immich
@@ -26,7 +23,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Mounted as read-only
     networks:
-      - vpn
       - arrs
       - immich
       - extras
@@ -51,7 +47,6 @@ services:
       - /mnt/ssd:/mnt/ssd:ro # optional, for 1TB SSD disk usage widget
       - /mnt/nas:/mnt/nas:ro # optional, for NAS disk usage widget
     networks:
-      - vpn
       - arrs
       - immich
       - extras
