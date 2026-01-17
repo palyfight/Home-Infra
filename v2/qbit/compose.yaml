@@ -5,7 +5,7 @@ networks:
 
 services:
   vpn:
-    image: qmcgaw/gluetun:v3.41.0
+    image: qmcgaw/gluetun:v3
     container_name: vpn
     cap_add:
       - NET_ADMIN
@@ -18,9 +18,6 @@ services:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
       - BLOCK_MALICIOUS=off
-      # - OPENVPN_USER=${OPENVPN_USER}
-      # - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
-      # - OPENVPN_CIPHERS=AES-256-GCM
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - PORT_FORWARD_ONLY=on
       - VPN_PORT_FORWARDING=on
@@ -29,13 +26,10 @@ services:
       # Better to turn off unneeded services
       - HTTPPROXY=off
       - SHADOWSOCKS=off
-      # Updater related variables: https://www.reddit.com/r/gluetun/comments/1owlrxw/proton_updating_setup/
-      - UPDATER_PERIOD=24h
-      - UPDATER_PROTONVPN_EMAIL=${PROTONVPN_EMAIL} #email associated to account
-      - UPDATER_PROTONVPN_PASSWORD=${PROTONVPN_PASSWORD} # account password
       # DNS settings: https://github.com/qdm12/gluetun/releases/tag/v3.41.0
-      - DNS_UPSTREAM_RESOLVER_TYPE=doh # https://github.com/qdm12/gluetun/issues/2942#issuecomment-3684906943
-      - DNS_UPSTREAM_RESOLVERS=google,quad9,opendns
+      # - DNS_UPSTREAM_RESOLVER_TYPE=doh # https://github.com/qdm12/gluetun/issues/2942#issuecomment-3684906943
+      # - DNS_UPSTREAM_RESOLVERS=google,quad9,opendns
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c 'wget -O- --retry-connrefused --post-data "json={\"listen_port\":{{PORTS}}}" http://127.0.0.1:8080/api/v2/app/setPreferences 2>&1'
     volumes:
       - ${SSD_PATH}/configs/vpn-config:/gluetun
       - ./auth:/gluetun/auth # for openvpn auth file: https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/control-server.md#authentication
