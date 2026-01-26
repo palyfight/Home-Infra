@@ -63,7 +63,7 @@ services:
       - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
-      - FIREWALL_OUTBOUND_SUBNETS=192.186.1.0/24
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24
       - VPN_SERVICE_PROVIDER=custom
       - VPN_TYPE=${VPN_TYPE}
       - VPN_PORT_FORWARDING=on
