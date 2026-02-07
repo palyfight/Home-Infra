@@ -1,0 +1,18 @@
+services:
+  crafty:
+    image: registry.gitlab.com/crafty-controller/crafty-4:latest
+    container_name: crafty_container
+    environment:
+        - TZ=${TZ}
+    ports:
+        - "8443:8443" # HTTPS
+        - "8123:8123" # DYNMAP
+        - "19132:19132/udp" # BEDROCK
+        - "25500-25600:25500-25600" # MC SERV PORT RANGE
+    volumes:
+        - ${SSD_PATH}/minecraft/docker/backups:/crafty/backups
+        - ${SSD_PATH}/minecraft/docker/logs:/crafty/logs
+        - ${SSD_PATH}/minecraft/docker/servers:/crafty/servers
+        - ${SSD_PATH}/minecraft/docker/config:/crafty/app/config
+        - ${SSD_PATH}/minecraft/docker/import:/crafty/import
+    restart: unless-stopped
