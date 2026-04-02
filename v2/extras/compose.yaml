@@ -66,6 +66,42 @@ services:
       - extras
     restart: unless-stopped
 
+  mongodb:
+    image: mongo:8
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    volumes:
+      - ${SSD_PATH}/configs/mongodb/data:/data/db
+      - ${SSD_PATH}/configs/mongodb/configdb:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - extras
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USER}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ROOT_PASSWORD}
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USER}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_PASSWORD}
+    ports:
+      - 8081:8081
+    networks:
+      - extras
+    restart: unless-stopped
+
   stirling-pdf:
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
     container_name: stirling-pdf
