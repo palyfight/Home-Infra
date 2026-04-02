@@ -14,17 +14,23 @@ color: slate
 layout:
   Media:
     style: row
-    columns: 3
+    columns: 4
   Automation:
     style: row
-    columns: 4
+    columns: 3
   Downloads:
     style: row
     columns: 3
   Infrastructure:
     style: row
-    columns: 2
+    columns: 4
   Cloud/Networking:
+    style: row
+    columns: 3
+  Gaming:
+    style: row
+    columns: 1
+  Utilities:
     style: row
     columns: 3
 

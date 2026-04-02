@@ -86,17 +86,29 @@
           type: tautulli
           url: http://192.168.1.176:8181
           key: ddd73976dd9147c7bb2ef4c193c85217
+    - Notifiarr:
+        icon: notifiarr.png
+        href: http://192.168.1.176:5454
+        description: Arr Notifications
+        server: my-docker
+        container: notifiarr
+    - Tracearr:
+        icon: mdi-chart-timeline-variant
+        href: http://192.168.1.176:3333
+        description: Arr Activity Tracker
+        server: my-docker
+        container: tracearr
 
 - Downloads:
-    # - Tdarr:
-    #     icon: tdarr.png
-    #     href: http://192.168.1.176:8265
-    #     description: Transcoding
-    #     server: my-docker
-    #     container: tdarr
-    #     widget:
-    #       type: tdarr
-    #       url: http://tdarr:8265
+    - Tdarr:
+        icon: tdarr.png
+        href: http://192.168.1.176:8265
+        description: Transcoding
+        server: my-docker
+        container: tdarr
+        widget:
+          type: tdarr
+          url: http://tdarr:8265
     - qBittorrent:
         icon: qbittorrent.png
         href: http://192.168.1.176:8080
@@ -111,6 +123,15 @@
           password: { your-password } # Replace with your qBittorrent password
 
 - Infrastructure:
+    - Traefik:
+        icon: traefik.png
+        href: http://192.168.1.176:8080
+        description: Reverse Proxy
+        server: my-docker
+        container: traefik
+        widget:
+          type: traefik
+          url: http://traefik:8080
     - Speedtest:
         icon: speedtest-tracker.png
         href: http://192.168.1.176:8765
@@ -152,7 +173,21 @@
         href: http://192.168.1.105:9999/desktop/?os=ugospro#/
         description: NAS Administration Interface
 
+- Gaming:
+    - Crafty:
+        icon: mdi-minecraft
+        href: https://192.168.1.176:8443
+        description: Minecraft Server Manager
+        server: my-docker
+        container: crafty_container
+
 - Utilities:
+    - n8n:
+        icon: n8n.png
+        href: http://192.168.1.176:5678
+        description: Workflow Automation
+        server: my-docker
+        container: n8n
     - Mealie:
         icon: mealie.png
         href: http://192.168.1.176:9925
