@@ -4,13 +4,21 @@ networks:
     name: tailscale
 
 services:
+  n8n-init:
+    image: busybox
+    container_name: n8n-init
+    command: chown -R ${PUID}:${PGID} /data
+    volumes:
+      - ${SSD_PATH}/configs/n8n-config:/data
+
   n8n:
     image: n8nio/n8n:latest
     container_name: n8n
     depends_on:
+      n8n-init:
+        condition: service_completed_successfully
       n8n-db:
         condition: service_healthy
-    user: "${PUID}:${PGID}"
     environment:
       - TZ=${TZ}
       - DB_TYPE=postgresdb
