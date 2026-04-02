@@ -29,6 +29,7 @@ services:
       - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD}
       - N8N_HOST=n8n.${TAILNET_SUFFIX}.${DOMAIN_BASE}
       - N8N_PROTOCOL=https
+      - N8N_SECURE_COOKIE=false
       - WEBHOOK_URL=https://n8n.${TAILNET_SUFFIX}.${DOMAIN_BASE}
     ports:
       - 5678:5678
