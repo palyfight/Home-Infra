@@ -15,7 +15,8 @@ services:
       - ${SSD_PATH}/configs/n8n-config:/data
 
   n8n:
-    image: n8nio/n8n:latest
+    build: .
+    image: n8n-custom:latest
     container_name: n8n
     depends_on:
       n8n-init:
