@@ -10,6 +10,7 @@ services:
     depends_on:
       n8n-db:
         condition: service_healthy
+    user: "${PUID}:${PGID}"
     environment:
       - TZ=${TZ}
       - DB_TYPE=postgresdb
