@@ -81,7 +81,9 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - extras
+      extras:
+        aliases:
+          - mongo
     restart: unless-stopped
 
   mongo-express:
