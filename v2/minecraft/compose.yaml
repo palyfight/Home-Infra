@@ -1,3 +1,8 @@
+networks:
+  tailscale:
+    name: tailscale
+    driver: bridge
+
 services:
   crafty:
     image: registry.gitlab.com/crafty-controller/crafty-4:latest
@@ -15,4 +20,45 @@ services:
         - ${SSD_PATH}/minecraft/docker/servers:/crafty/servers
         - ${SSD_PATH}/minecraft/docker/config:/crafty/app/config
         - ${SSD_PATH}/minecraft/docker/import:/crafty/import
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=tailscale"  # ensure Traefik uses this network
+      ## HTTP Routers
+      - "traefik.http.routers.crafty.rule=Host(`crafty.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)"
+      - "traefik.http.routers.crafty.entrypoints=websecure"
+      - "traefik.http.routers.crafty.tls.certresolver=letsencrypt"
+      ## HTTP Services
+      - "traefik.http.services.crafty.loadbalancer.server.port=8443"
+      ## Middleware
+      - 'traefik.http.routers.crafty.middlewares=crafty-mw'
+      #### The customResponseHeaders option lists the Header names and values to apply to the response.
+      - 'traefik.http.middlewares.crafty-mw.headers.customResponseHeaders.X-Robots-Tag=noindex,nofollow,nosnippet,noarchive,notranslate,noimageindex'
+      #### The sslRedirect is set to true, then only allow https requests.
+      - 'traefik.http.middlewares.crafty-mw.headers.SSLRedirect=true'
+      #### The sslHost option is the host name that is used to redirect http requests to https.
+      #### This is the exact URL that will be redirected to, so you can remove the :9999 port if using default SSL port
+      - "traefik.http.middlewares.crafty-mw.headers.SSLHost=crafty.${TAILNET_SUFFIX}.${DOMAIN_BASE}"
+      #### Set sslForceHost to true and set SSLHost to forced requests to use SSLHost even the ones that are already using SSL.
+      #### Note that this uses SSLHost verbatim, so add the port to SSLHost if you are using an alternate port.
+      - 'traefik.http.middlewares.crafty-mw.headers.SSLForceHost=true'
+      #### The stsSeconds is the max-age of the Strict-Transport-Security header. If set to 0, would NOT include the header.
+      - 'traefik.http.middlewares.crafty-mw.headers.STSSeconds=315360000'
+      #### The stsIncludeSubdomains is set to true, the includeSubDomains directive will be
+      #### appended to the Strict-Transport-Security header.
+      - 'traefik.http.middlewares.crafty-mw.headers.STSIncludeSubdomains=true'
+      #### Set stsPreload to true to have the preload flag appended to the Strict-Transport-Security header.
+      - 'traefik.http.middlewares.crafty-mw.headers.STSPreload=true'
+      #### Set forceSTSHeader to true, to add the STS header even when the connection is HTTP.
+      - 'traefik.http.middlewares.crafty-mw.headers.forceSTSHeader=true'
+      #### Set frameDeny to true to add the X-Frame-Options header with the value of DENY.
+      - 'traefik.http.middlewares.crafty-mw.headers.frameDeny=true'
+      #### Set contentTypeNosniff to true to add the X-Content-Type-Options header with the value nosniff.
+      - 'traefik.http.middlewares.crafty-mw.headers.contentTypeNosniff=true'
+      #### Set browserXssFilter to true to add the X-XSS-Protection header with the value 1; mode=block.
+      - 'traefik.http.middlewares.crafty-mw.headers.customresponseheaders.X-XSS-PROTECTION=1'
+      #### The customFrameOptionsValue allows the X-Frame-Options header value to be set with a custom value. This
+      #### overrides the FrameDeny option.
+      - "traefik.http.middlewares.crafty-mw.headers.customFrameOptionsValue='allow-from https://crafty.${TAILNET_SUFFIX}.${DOMAIN_BASE}'"
+    networks:
+      - tailscale
     restart: unless-stopped

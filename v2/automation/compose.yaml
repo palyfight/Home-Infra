@@ -1,0 +1,67 @@
+networks:
+  tailscale:
+    external: true
+    name: tailscale
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    depends_on:
+      n8n-db:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=n8n-db
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${N8N_DB_NAME}
+      - DB_POSTGRESDB_USER=${N8N_DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD}
+      - N8N_HOST=n8n.${TAILNET_SUFFIX}.${DOMAIN_BASE}
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.${TAILNET_SUFFIX}.${DOMAIN_BASE}
+    ports:
+      - 5678:5678
+    volumes:
+      - ${SSD_PATH}/configs/n8n-config:/home/node/.n8n
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=tailscale"
+      ## HTTP Routers
+      - "traefik.http.routers.n8n.rule=Host(`n8n.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)"
+      - "traefik.http.routers.n8n.entrypoints=websecure"
+      - "traefik.http.routers.n8n.tls.certresolver=letsencrypt"
+      ## HTTP Services
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+      ## Middleware
+      - "traefik.http.routers.n8n.middlewares=n8n-headers"
+      - "traefik.http.middlewares.n8n-headers.headers.SSLRedirect=true"
+      - "traefik.http.middlewares.n8n-headers.headers.STSSeconds=315360000"
+      - "traefik.http.middlewares.n8n-headers.headers.STSIncludeSubdomains=true"
+      - "traefik.http.middlewares.n8n-headers.headers.STSPreload=true"
+      - "traefik.http.middlewares.n8n-headers.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.n8n-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.n8n-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.n8n-headers.headers.frameDeny=true"
+    networks:
+      - tailscale
+    restart: unless-stopped
+
+  n8n-db:
+    image: postgres:16-alpine
+    container_name: n8n-db
+    environment:
+      - POSTGRES_DB=${N8N_DB_NAME}
+      - POSTGRES_USER=${N8N_DB_USER}
+      - POSTGRES_PASSWORD=${N8N_DB_PASSWORD}
+    volumes:
+      - ${SSD_PATH}/configs/n8n-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${N8N_DB_USER} -d ${N8N_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tailscale
+    restart: unless-stopped

@@ -93,7 +93,7 @@ services:
       - --entrypoints.websecure.http.tls=true
       - --entrypoints.websecure.http.tls.certResolver=letsencrypt
       - --entrypoints.websecure.http.tls.domains[0].main=${DOMAIN_BASE}
-      - --entrypoints.websecure.http.tls.domains[0].sans=`*${TAILNET_SUFFIX}.${DOMAIN_BASE}`
+      - --entrypoints.websecure.http.tls.domains[0].sans=`*.${TAILNET_SUFFIX}.${DOMAIN_BASE}`
     labels:
       - "traefik.enable=true"
       - 'traefik.http.routers.traefik.rule=Host(`traefik.${TAILNET_SUFFIX}.${DOMAIN_BASE}`)' # Change to your desired domain for Traefik dashboard
