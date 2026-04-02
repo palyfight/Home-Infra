@@ -72,18 +72,14 @@ services:
       - n8n-internal
     restart: unless-stopped
 
-  n8n-runner-py:
-    image: n8nio/n8n:latest
-    container_name: n8n-runner-py
+  n8n-runners:
+    image: n8nio/runners:latest
+    container_name: n8n-runners
     depends_on:
       - n8n
-    entrypoint: ["/usr/local/bin/node", "/usr/local/lib/node_modules/n8n/dist/task-runners/task-runner-process-py.js"]
     environment:
-      - N8N_RUNNERS_ENABLED=true
-      - N8N_RUNNERS_MODE=external
-      - N8N_RUNNERS_TASK_BROKER_URI=ws://n8n:5679
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
-      - N8N_RUNNERS_RUNNER_TYPE=python
+      - N8N_RUNNERS_TASK_BROKER_URI=ws://n8n:5679
     networks:
       - n8n-internal
       - extras
