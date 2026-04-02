@@ -73,15 +73,16 @@ services:
     restart: unless-stopped
 
   n8n-runners:
-    image: n8nio/runners:latest
+    build:
+      context: .
+      dockerfile: runners.Dockerfile
+    image: n8n-runners-custom:latest
     container_name: n8n-runners
     depends_on:
       - n8n
     environment:
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
       - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
-      - N8N_RUNNERS_STDLIB_ALLOW=*
-      - N8N_RUNNERS_EXTERNAL_ALLOW=pymongo
     networks:
       - n8n-internal
       - extras
