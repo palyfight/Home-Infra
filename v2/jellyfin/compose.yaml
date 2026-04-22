@@ -74,6 +74,7 @@ services:
       - tailscale
     network_mode: service:tailscale
     command:
+      - --log.level=DEBUG
       # Tell Traefik to discover containers using the Docker API
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false

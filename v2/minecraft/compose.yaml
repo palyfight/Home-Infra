@@ -1,7 +1,7 @@
 networks:
   tailscale:
+    external: true
     name: tailscale
-    driver: bridge
 
 services:
   crafty:
