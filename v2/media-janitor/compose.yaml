@@ -7,6 +7,7 @@ services:
   media-janitor:
     build: .
     image: media-janitor:latest
+    pull_policy: build # local image: build it, never try Docker Hub
     container_name: media-janitor
     network_mode: host
     env_file: .env

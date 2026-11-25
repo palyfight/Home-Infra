@@ -7,6 +7,10 @@
 #   ./stack.sh restart   Down then up
 #   ./stack.sh status    Show running containers per stack
 #
+# Extra arguments are passed to every `docker compose up` / `down`, e.g.
+#   ./stack.sh up --remove-orphans
+#   ./stack.sh restart --remove-orphans
+#
 # Note on Docker Hub rate limits:
 #   On a fresh machine (or after image updates), `up` pulls many images at once
 #   and may hit Docker Hub's anonymous pull limit (100 pulls / 6h per IP),
@@ -61,7 +65,7 @@ up() {
   require_mounts
   for stack in "${STACKS[@]}"; do
     echo ">>> Starting $stack"
-    (cd "$stack" && docker compose up -d)
+    (cd "$stack" && docker compose up -d "$@")
   done
 }
 
@@ -69,7 +73,7 @@ down() {
   for (( i=${#STACKS[@]}-1; i>=0; i-- )); do
     stack="${STACKS[i]}"
     echo ">>> Stopping $stack"
-    (cd "$stack" && docker compose down)
+    (cd "$stack" && docker compose down "$@")
   done
 }
 
@@ -81,10 +85,13 @@ status() {
   done
 }
 
-case "${1:-}" in
-  up)      up ;;
-  down)    down ;;
-  restart) down; up ;;
+cmd="${1:-}"
+shift || true
+
+case "$cmd" in
+  up)      up "$@" ;;
+  down)    down "$@" ;;
+  restart) down "$@"; up "$@" ;;
   status)  status ;;
   *)
     echo "Usage: $0 {up|down|restart|status}" >&2
