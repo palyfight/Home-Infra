@@ -145,9 +145,10 @@ class Plex:
                          md.get("year"), ids["tmdb"], ids["tvdb"], ids["imdb"], paths)
 
     def delete(self, item):
+        """Return True if Plex removed the item, False if it only rescanned its folder."""
         r = self.s.delete(f"{self.url}/library/metadata/{item.rating_key}", timeout=TIMEOUT)
         if r.ok or r.status_code == 404:
-            return
+            return True
         # Most often 403: "Allow media deletion" is off in Plex settings. Ask Plex
         # to rescan the folder instead; once the files are gone the item becomes
         # unavailable and Plex drops it on scan if "Empty trash automatically
@@ -158,6 +159,7 @@ class Plex:
         for folder in item.folders:
             self.s.get(f"{self.url}/library/sections/{item.section_id}/refresh",
                        params={"path": folder}, timeout=TIMEOUT)
+        return False
 
 
 # --------------------------------------------------------------------------- Radarr / Sonarr
@@ -359,8 +361,10 @@ class Janitor:
             arr.delete(e, self.add_exclusion)
         for j in jf_items:
             self.jellyfin.delete(j["Id"])
-        self.plex.delete(item)
-        log.info("Done: %s", item.name)
+        if self.plex.delete(item):
+            log.info("Done: %s", item.name)
+        else:
+            log.info("Removed %s everywhere except Plex; will retry Plex next cycle", item.name)
 
     def loop(self, interval):
         log.info("Watching Plex tag %r (in: %s) every %ss (dry run: %s)",
