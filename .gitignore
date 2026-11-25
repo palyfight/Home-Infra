@@ -9,3 +9,5 @@ homepage-config/logs
 .log
 
 *.py
+!v2/media-janitor/janitor.py
+__pycache__/

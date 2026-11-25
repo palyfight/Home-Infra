@@ -1,0 +1,13 @@
+# Deletes anything tagged "Trash" in Plex from qBittorrent, Radarr/Sonarr,
+# Jellyfin and Plex. See janitor.py for how it works.
+#
+# Host networking: Plex is already host-networked, and the other services
+# publish their ports on the host, so everything is reachable on localhost.
+services:
+  media-janitor:
+    build: .
+    image: media-janitor:latest
+    container_name: media-janitor
+    network_mode: host
+    env_file: .env
+    restart: unless-stopped

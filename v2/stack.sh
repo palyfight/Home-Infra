@@ -29,6 +29,7 @@ STACKS=(
   extras
   qbit
   plex
+  media-janitor
   automation
   homepage
   finance
