@@ -365,12 +365,15 @@ class Janitor:
     def loop(self, interval):
         log.info("Watching Plex tag %r (in: %s) every %ss (dry run: %s)",
                  self.tag, ", ".join(self.tag_fields), interval, self.dry_run)
+        retry = min(30, interval)
         while True:
             try:
                 self.run_once()
+                time.sleep(interval)
             except Exception as e:
-                log.error("Cycle failed: %s", e)
-            time.sleep(interval)
+                # Usually a service still starting up (Plex answers 503 for a while after boot).
+                log.error("Cycle failed, retrying in %ss: %s", retry, e)
+                time.sleep(retry)
 
 
 def main():
