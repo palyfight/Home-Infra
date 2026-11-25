@@ -1,3 +1,8 @@
+# Fixed name so homepage can join it and reach gluetun's control server (gluetun:8000)
+networks:
+  default:
+    name: qbit
+
 services:
   gluetun:
     image: qmcgaw/gluetun:v3

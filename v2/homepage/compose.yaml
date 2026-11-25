@@ -8,6 +8,9 @@ networks:
   extras:
     external: true
     name: extras
+  qbit:
+    external: true
+    name: qbit
 
 services:
   dockerproxy:
@@ -15,11 +18,8 @@ services:
     container_name: dockerproxy
     environment:
       - CONTAINERS=1 # Allow access to viewing containers
-      - SERVICES=1 # Allow access to viewing services (necessary when using Docker Swarm)
-      - TASKS=1 # Allow access to viewing tasks (necessary when using Docker Swarm)
       - POST=0 # Disallow any POST operations (effectively read-only)
-    ports:
-      - 127.0.0.1:2375:2375
+    # No published port: homepage reaches it as dockerproxy:2375 on the shared networks
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Mounted as read-only
     networks:
@@ -33,8 +33,9 @@ services:
     container_name: homepage
     depends_on:
       - dockerproxy
+    env_file: .env # HOMEPAGE_VAR_* secrets used in services.yaml
     environment:
-      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.176:3000 # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
+      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.176:3000 # LAN only on purpose: no Traefik route. See gethomepage.dev/installation/#homepage_allowed_hosts
       PUID: ${PUID} # optional, your user id
       PGID: ${PGID} # optional, your group id
     ports:
@@ -50,6 +51,7 @@ services:
       - arrs
       - immich
       - extras
+      - qbit
     restart: unless-stopped
 
   speedtest-tracker:

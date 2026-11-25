@@ -268,7 +268,8 @@ curl -I https://plex.ts.paly-home.work
 curl -I https://immich.ts.paly-home.work
 ```
 
-Or just open the homepage dashboard: `https://homepage.ts.paly-home.work`.
+Or open the homepage dashboard from the home network (it isn't routed through
+Tailscale on purpose): `http://192.168.1.176:3000`.
 
 ---
 

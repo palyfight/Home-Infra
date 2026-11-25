@@ -11,7 +11,7 @@
         widget:
           type: immich
           url: http://immich_server:2283
-          key: ToyL6BcVY8CY50i6FElo8aNW5LNBmgWtF4goiMUO3mA # Account Settings > API Keys
+          key: "{{HOMEPAGE_VAR_IMMICH_KEY}}" # Account Settings > API Keys
           version: 2 # Optional, but recommended for v2 server
     - Jellyseerr:
         icon: jellyseerr.png
@@ -22,7 +22,7 @@
         widget:
           type: jellyseerr
           url: http://jellyseerr:5055
-          key: MTc2MjEwNDg4NjI2MmM0YWU4M2NjLTA5ZGItNDA0MC05NTRlLTU1ZTMwODNhMTcwMg== # Settings > General > API Key
+          key: "{{HOMEPAGE_VAR_JELLYSEERR_KEY}}" # Settings > General > API Key
     - Plex:
         icon: plex.png
         href: http://192.168.1.176:32400/web/index.html#!/
@@ -32,7 +32,7 @@
         widget:
           type: plex
           url: http://192.168.1.176:32400
-          key: zTxeSHCSJwrWbrz1dypK # Find via https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+          key: "{{HOMEPAGE_VAR_PLEX_TOKEN}}" # Find via https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
     - Jellyfin:
         icon: jellyfin.png
         href: http://192.168.1.176:8096
@@ -42,7 +42,7 @@
         widget:
           type: jellyfin
           url: http://192.168.1.176:8096
-          key: a711976c29604ef78a1615a14bfb7027 # Dashboard > API Keys
+          key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}" # Dashboard > API Keys
           enableBlocks: true # Shows active streams
 
 - Automation:
@@ -55,7 +55,7 @@
         widget:
           type: sonarr
           url: http://sonarr:8989
-          key: a98a003710254cdc819866079e402758 # Settings > General > API Key
+          key: "{{HOMEPAGE_VAR_SONARR_KEY}}" # Settings > General > API Key
     - Radarr:
         icon: radarr.png
         href: http://192.168.1.176:7878
@@ -65,7 +65,7 @@
         widget:
           type: radarr
           url: http://radarr:7878
-          key: 41b2cb248ee140de929673d51a33c230 # Settings > General > API Key
+          key: "{{HOMEPAGE_VAR_RADARR_KEY}}" # Settings > General > API Key
     - Prowlarr:
         icon: prowlarr.png
         href: http://192.168.1.176:9696
@@ -75,7 +75,7 @@
         widget:
           type: prowlarr
           url: http://prowlarr:9696
-          key: 9741e9a7180c461bbe15142874ab2e03
+          key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
     - Tautulli:
         icon: tautulli.png
         href: http://192.168.1.176:8181
@@ -85,7 +85,7 @@
         widget:
           type: tautulli
           url: http://192.168.1.176:8181
-          key: ddd73976dd9147c7bb2ef4c193c85217
+          key: "{{HOMEPAGE_VAR_TAUTULLI_KEY}}"
     - Notifiarr:
         icon: notifiarr.png
         href: http://192.168.1.176:5454
@@ -104,25 +104,22 @@
         icon: qbittorrent.png
         href: http://192.168.1.176:8080
         description: Downloader
-        # --- NEW: Docker Status (qBittorrent is likely inside the 'vpn' container group, so we will monitor the 'vpn' container instead) ---
+        # qBittorrent runs inside gluetun's network, so the container status comes from gluetun
         server: my-docker
         container: gluetun
         widget:
           type: qbittorrent
           url: http://192.168.1.176:8080
-          username: { your-username } # Replace with your qBittorrent username
-          password: { your-password } # Replace with your qBittorrent password
+          username: "{{HOMEPAGE_VAR_QBIT_USER}}"
+          password: "{{HOMEPAGE_VAR_QBIT_PASS}}"
 
 - Infrastructure:
     - Traefik:
         icon: traefik.png
-        href: http://192.168.1.176:8080
+        href: https://traefik.ts.paly-home.work # dashboard is only routed via Tailscale
         description: Reverse Proxy
         server: my-docker
         container: traefik
-        widget:
-          type: traefik
-          url: http://traefik:8080
     - Speedtest:
         icon: speedtest-tracker.png
         href: http://192.168.1.176:8765
@@ -133,7 +130,7 @@
           type: speedtest
           url: http://192.168.1.176:8765
           # REQUIRED: You must generate an API key in the Speedtest Tracker UI (General > API Tokens)
-          key: 8J7ZaCw7qfbedUhQKedf80jM1ZtcettbBVkeAWqCeef569d7
+          key: "{{HOMEPAGE_VAR_SPEEDTEST_KEY}}"
     - Gluetun VPN:
         icon: gluetun.png
         description: VPN Tunnel
@@ -142,7 +139,7 @@
         # This checks the public IP the VPN is currently using
         widget:
           type: gluetun
-          url: http://192.168.1.176:8000 # Control port for Gluetun
+          url: http://gluetun:8000 # control server, via the qbit network (auth: qbit/auth/config.toml)
     - Labelarr:
         icon: plex.png
         description: Auto-Labeler
