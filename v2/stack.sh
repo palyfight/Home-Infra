@@ -30,9 +30,7 @@ STACKS=(
   qbit
   plex
   media-janitor
-  automation
   homepage
-  finance
 )
 
 # Paths that must be real mountpoints before any stack is started. If the NFS

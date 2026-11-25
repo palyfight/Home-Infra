@@ -266,7 +266,6 @@ From a Tailscale-connected client:
 curl -I https://jellyfin.ts.paly-home.work
 curl -I https://plex.ts.paly-home.work
 curl -I https://immich.ts.paly-home.work
-curl -I https://n8n.ts.paly-home.work
 ```
 
 Or just open the homepage dashboard: `https://homepage.ts.paly-home.work`.
@@ -311,14 +310,6 @@ sudo apt autoremove --purge
 - **One failed stack blocks the rest** — `stack.sh up` stops at the first error. To
   start the remaining stacks while you debug, run `docker compose up -d` in each
   stack's directory, in the order listed in [stack.sh](stack.sh).
-- **MongoDB won't start on kernel 6.19+** — `mongodb` restarts in a loop, logging
-  `MongoDB cannot start: Linux kernel versions 6.19 and newer has a known
-  incompatibility`, which fails `extras` and stops `stack.sh up`. As of 2026-11-04,
-  MongoDB's table lists 8.3.14+ and 8.0.35+ as working on fixed kernels, but
-  `mongo:8` is still 8.3.13. Its check reads `uname -r`, which Ubuntu reports as
-  `7.0.0` even on kernels with the upstream fix. Don't look for a bypass. See
-  [SERVER-125742](https://jira.mongodb.org/browse/SERVER-125742) and
-  [SERVER-136848](https://jira.mongodb.org/browse/SERVER-136848).
 
 ### TUXEDO kernel packages fail to install
 

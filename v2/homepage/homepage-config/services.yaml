@@ -100,15 +100,6 @@
         container: tracearr
 
 - Downloads:
-    - Tdarr:
-        icon: tdarr.png
-        href: http://192.168.1.176:8265
-        description: Transcoding
-        server: my-docker
-        container: tdarr
-        widget:
-          type: tdarr
-          url: http://tdarr:8265
     - qBittorrent:
         icon: qbittorrent.png
         href: http://192.168.1.176:8080
@@ -182,12 +173,6 @@
         container: crafty_container
 
 - Utilities:
-    - n8n:
-        icon: n8n.png
-        href: http://192.168.1.176:5678
-        description: Workflow Automation
-        server: my-docker
-        container: n8n
     - Mealie:
         icon: mealie.png
         href: http://192.168.1.176:9925
