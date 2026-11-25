@@ -4,12 +4,12 @@ This is the runbook to follow whenever the Ubuntu Server host (`homeserver`,
 Motorcomm YT6801 ethernet) needs a system update, kernel upgrade, or full
 release upgrade.
 
-The tricky part: **any kernel upgrade breaks the ethernet driver** until the
-out-of-tree YT6801 module is rebuilt against the new kernel. So we lose wired
-internet mid-upgrade and have to fall back to Wi-Fi to finish the job.
+The tricky part: **a kernel upgrade can leave the ethernet port without a driver.**
+HWE 7.0 kernels include a built-in driver (`dwmac-motorcomm`), so no rebuild should
+be needed, but we keep Wi-Fi as a fallback in case wired doesn't come back.
 
 The runbook below walks through the full cycle: stack down → Wi-Fi → upgrade →
-driver rebuild → ethernet back → stack up → verify.
+check the driver → ethernet back → stack up → verify → clean up old kernels.
 
 ---
 
@@ -21,8 +21,37 @@ driver rebuild → ethernet back → stack up → verify.
 - These files in [../ubuntu-server/](../ubuntu-server/):
   - `ethernet-netplan.yaml` — static-IP wired config for `enp1s0`
   - `wifi-netplan.yaml` — Wi-Fi fallback template
-  - `tuxedo-yt6801_1.0.28-1_all.deb` — the YT6801 driver package
+  - `tuxedo-apt-pin.pref` — limits what apt takes from the TUXEDO repo
+  - `tuxedo-yt6801_1.0.28-1_all.deb` — older driver package, for offline use only
 - Wi-Fi SSID and password ready
+
+### One-time host setup
+
+The TUXEDO repo must match the Ubuntu release. This should list `noble`, not
+`resolute`:
+
+```bash
+apt-cache policy tuxedo-yt6801
+```
+
+If it's wrong, see
+[TUXEDO kernel packages fail to install](#tuxedo-kernel-packages-fail-to-install).
+
+Pin the repo so it only supplies `tuxedo-*` packages and never a TUXEDO kernel:
+
+```bash
+sudo cp ~/Home-Infra/ubuntu-server/tuxedo-apt-pin.pref /etc/apt/preferences.d/tuxedo
+sudo apt update
+apt-cache policy libva2 linux-tuxedo   # libva2 candidate is Ubuntu's; linux-tuxedo has none
+```
+
+Allow the built-in NIC driver to load automatically
+([why](../ubuntu-server/README.md#built-in-driver-and-the-tuxedo-blacklist)):
+
+```bash
+sudo ln -s /dev/null /etc/modprobe.d/tuxedo-yt6801-backlist-upstream-conflicts.conf
+sudo update-initramfs -u
+```
 
 ---
 
@@ -43,7 +72,7 @@ docker ps
 
 ## 2. Switch to the Wi-Fi netplan
 
-Kernel upgrade will break ethernet — get Wi-Fi ready **before** you upgrade,
+A kernel upgrade may break ethernet — get Wi-Fi ready **before** you upgrade,
 while wired still works.
 
 ```bash
@@ -53,7 +82,7 @@ sudo cp ~/Home-Infra/ubuntu-server/wifi-netplan.yaml /etc/netplan/60-wifi.yaml
 sudo chmod 600 /etc/netplan/60-wifi.yaml
 
 # Disable the ethernet netplan (netplan ignores files not ending in .yaml)
-sudo mv /etc/netplan/50-ethernet.yaml /etc/netplan/50-ethernet.yaml.disabled
+sudo mv /etc/netplan/50-ethernet-netplan.yaml /etc/netplan/50-ethernet-netplan.yaml.disabled
 # (adjust the filename to whatever you currently have in /etc/netplan/)
 
 sudo netplan apply
@@ -74,14 +103,26 @@ ping -c 3 1.1.1.1
 
 ## 3. Run the upgrade
 
-Apt update/upgrade:
+Preview first. **Stop if the output includes a `linux-*tuxedo*` package**, or
+packages you didn't expect from the TUXEDO repo: the repo or pin from section 0 is
+wrong.
 
 ```bash
 sudo apt update
-sudo apt upgrade -y
-sudo apt dist-upgrade -y
-sudo apt autoremove --purge -y
+sudo apt dist-upgrade --dry-run
 ```
+
+Then upgrade. If apt ends with `dpkg returned an error code`, deal with that before
+continuing, and don't reboot until you've checked `sudo dpkg --audit`.
+
+```bash
+sudo apt upgrade
+sudo apt dist-upgrade
+sudo dpkg --audit         # should print nothing
+```
+
+Don't run `autoremove` yet. Old kernels are your fallback until
+[section 11](#11-clean-up-old-kernels).
 
 For a full Ubuntu release upgrade (e.g. 22.04 → 24.04):
 
@@ -89,9 +130,10 @@ For a full Ubuntu release upgrade (e.g. 22.04 → 24.04):
 sudo do-release-upgrade
 ```
 
-Reboot when done:
+Reboot when done. Check that GRUB's default is the kernel you expect first:
 
 ```bash
+sudo grep -E "^\s*(menuentry|submenu) " /boot/grub/grub.cfg | cut -d"'" -f2
 sudo reboot
 ```
 
@@ -99,66 +141,66 @@ sudo reboot
 
 ## 4. Reconnect after reboot
 
-SSH back in over Wi-Fi. The wired interface will be dead until the driver is
-rebuilt in the next step.
+SSH back in over Wi-Fi. The ethernet netplan is still disabled, so wired won't have
+an address yet, even if the driver is fine.
 
 ---
 
-## 5. Rebuild the YT6801 ethernet driver
+## 5. Check the YT6801 ethernet driver
 
-The YT6801 is not in the mainline kernel, so the driver must be reinstalled
-against the new kernel every time the kernel changes. Source and context:
+```bash
+uname -r
+lspci -k -d 1f0a:6801
+```
+
+| Result | What to do |
+|---|---|
+| `Kernel driver in use: dwmac-motorcomm` | The built-in driver is working. Go to step 6. |
+| `Kernel driver in use: yt6801` | The out-of-tree driver is working. Go to step 6. |
+| No `Kernel driver in use` line | Run `sudo modprobe dwmac-motorcomm` and check again. If that works, make sure the blacklist override from section 0 is in place. |
+| Still no driver | Reboot into `6.8.0-*-generic` from the GRUB menu, which has the out-of-tree driver built. |
+
+The 6.8 kernel is only a temporary fallback, because QSV needs the HWE kernel.
+
+Background and manual driver install:
 [../ubuntu-server/README.md](../ubuntu-server/README.md).
-
-```bash
-# 1. Matching kernel headers for the running kernel
-sudo apt install linux-headers-$(uname -r)
-
-# 2. Install the driver package (ships as a .deb in this repo)
-cd ~/Home-Infra/ubuntu-server
-sudo dpkg -i tuxedo-yt6801_1.0.28-1_all.deb
-
-# 3. Rebuild module dependency list
-sudo depmod
-
-# 4. Confirm the module is loaded
-lsmod | grep yt6801
-```
-
-If `lsmod` shows `yt6801`, the driver is in place. Reboot so the interface
-comes up cleanly:
-
-```bash
-sudo reboot
-```
-
-> If a newer `.deb` exists upstream, grab it first:
-> `wget https://github.com/dante1613/Motorcomm-YT6801/raw/main/tuxedo-yt6801/tuxedo-yt6801_*.deb`
 
 ---
 
 ## 6. Switch back to the ethernet netplan
 
+Keep Wi-Fi enabled until a reboot has proven wired works, so you can't lose remote
+access.
+
 ```bash
 # Re-enable wired config
-sudo mv /etc/netplan/50-ethernet.yaml.disabled /etc/netplan/50-ethernet.yaml
-
-# Retire the Wi-Fi config (or keep it disabled for the next upgrade)
-sudo mv /etc/netplan/60-wifi.yaml /etc/netplan/60-wifi.yaml.disabled
-
-sudo chmod 600 /etc/netplan/50-ethernet.yaml
+sudo mv /etc/netplan/50-ethernet-netplan.yaml.disabled /etc/netplan/50-ethernet-netplan.yaml
+sudo chmod 600 /etc/netplan/50-ethernet-netplan.yaml
 sudo netplan apply
+
+ip -4 a show enp1s0              # should show 192.168.1.176/24
+ping -c 3 -I enp1s0 1.1.1.1
+sudo reboot
 ```
 
-Verify wired is up at the expected static IP and the internet works:
+Reconnect to `palyfight@192.168.1.176` (or the hostname) and confirm the driver
+loaded by itself:
 
 ```bash
-ip -4 a show enp1s0        # should show 192.168.1.176/24
-ping -c 3 1.1.1.1
+lspci -k -d 1f0a:6801
+ip -4 a show enp1s0
+ping -c 3 -I enp1s0 1.1.1.1
 ```
 
-SSH sessions over the Wi-Fi IP will drop when you apply — reconnect to
-`palyfight@192.168.1.176` (or the hostname).
+Then retire Wi-Fi. Make sure you're connected through the wired IP first, because
+this drops any session using the Wi-Fi IP:
+
+```bash
+sudo mv /etc/netplan/60-wifi.yaml /etc/netplan/60-wifi.yaml.disabled
+sudo netplan apply
+ip route | grep default          # should only show enp1s0
+ping -c 3 1.1.1.1
+```
 
 ---
 
@@ -196,6 +238,9 @@ cd ~/Home-Infra/v2
 the guard that stops Plex/Jellyfin/arrs from silently serving an empty dir.
 If it errors, go back to step 7.
 
+It also stops at the first stack that fails, so later stacks won't have started.
+See [Common gotchas](#common-gotchas).
+
 ---
 
 ## 9. Tailscale IP sanity check
@@ -228,6 +273,19 @@ Or just open the homepage dashboard: `https://homepage.ts.paly-home.work`.
 
 ---
 
+## 11. Clean up old kernels
+
+Only once everything above works. Check the preview doesn't remove the running
+kernel or your 6.8 fallback:
+
+```bash
+uname -r
+sudo apt autoremove --purge --dry-run
+sudo apt autoremove --purge
+```
+
+---
+
 ## Related references
 
 - Hardware-specific driver notes: [../ubuntu-server/README.md](../ubuntu-server/README.md)
@@ -250,3 +308,48 @@ Or just open the homepage dashboard: `https://homepage.ts.paly-home.work`.
   eliminate the manual step entirely.
 - **`netplan apply` hangs** if a wifi password is wrong — it keeps retrying.
   Check with `journalctl -u systemd-networkd -f` in another session.
+- **One failed stack blocks the rest** — `stack.sh up` stops at the first error. To
+  start the remaining stacks while you debug, run `docker compose up -d` in each
+  stack's directory, in the order listed in [stack.sh](stack.sh).
+- **MongoDB won't start on kernel 6.19+** — `mongodb` restarts in a loop, logging
+  `MongoDB cannot start: Linux kernel versions 6.19 and newer has a known
+  incompatibility`, which fails `extras` and stops `stack.sh up`. As of 2026-11-04,
+  MongoDB's table lists 8.3.14+ and 8.0.35+ as working on fixed kernels, but
+  `mongo:8` is still 8.3.13. Its check reads `uname -r`, which Ubuntu reports as
+  `7.0.0` even on kernels with the upstream fix. Don't look for a bypass. See
+  [SERVER-125742](https://jira.mongodb.org/browse/SERVER-125742) and
+  [SERVER-136848](https://jira.mongodb.org/browse/SERVER-136848).
+
+### TUXEDO kernel packages fail to install
+
+Symptom: `run-parts: missing operand`, then `dpkg returned an error code (1)`, on
+`linux-headers-*-tuxedo` or `linux-image-*-tuxedo`.
+
+Cause: the host is on the 26.04 (`resolute`) TUXEDO repo. Those packages' scripts
+pass `run-parts` two directories, and 24.04's version only accepts one.
+
+Fix:
+
+```bash
+# 1. See what's affected and whether any kernel is half-installed
+dpkg -l | grep -E 'linux-.*tuxedo'
+sudo dpkg --audit
+
+# 2. Purge every linux-*tuxedo* package from that list. Use dpkg, because apt tries
+#    to reinstall a half-installed package first, which fails the same way.
+sudo dpkg --purge --force-remove-reinstreq <packages>
+
+# 3. Switch the repo by installing the matching tuxedo-repository build. Check the
+#    SHA256 against the repo's noble Packages index first. A downgrade warning is
+#    expected.
+cd /tmp
+curl -fsSLO 'https://deb.tuxedocomputers.com/ubuntu/pool/main/t/tuxedo-repository/tuxedo-repository_1.0.3+24.04_all.deb'
+sudo dpkg -i 'tuxedo-repository_1.0.3+24.04_all.deb'
+
+# 4. Confirm
+sudo apt update
+sudo dpkg --configure -a
+sudo dpkg --audit         # should print nothing
+```
+
+Then install the pin from section 0 so this can't come back.

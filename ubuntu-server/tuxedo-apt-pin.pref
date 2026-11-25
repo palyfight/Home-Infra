@@ -1,0 +1,20 @@
+# Install to /etc/apt/preferences.d/tuxedo (see v2/README.md, section 0).
+#
+# The TUXEDO repo is only here for tuxedo-* packages such as the YT6801 driver.
+# Without this pin, apt also takes its builds of unrelated packages (libva,
+# intel-media-va-driver) and its kernels via linux-tuxedo.
+
+# Never install a TUXEDO kernel. This host runs Ubuntu's HWE kernel.
+Package: linux-*tuxedo*
+Pin: origin deb.tuxedocomputers.com
+Pin-Priority: -1
+
+# Keep tracking TUXEDO's own packages.
+Package: tuxedo-*
+Pin: origin deb.tuxedocomputers.com
+Pin-Priority: 500
+
+# Prefer Ubuntu's version of everything else.
+Package: *
+Pin: origin deb.tuxedocomputers.com
+Pin-Priority: 100
